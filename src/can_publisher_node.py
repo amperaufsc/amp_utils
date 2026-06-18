@@ -6,7 +6,7 @@ from std_msgs.msg import Float32, UInt8, UInt16
 
 class CanPublisherNode(Node):
     def __init__(self):
-        super().__init__('CanPublisherNode')
+        super().__init__('can_publisher_node')
 
         self.can_reader = StateCanReader()
 

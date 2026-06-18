@@ -51,7 +51,7 @@ install(
 )
 install(
         PROGRAMS 
-        ros2/can_publisher.py
+        src/can_publisher_node.py
         DESTINATION lib/${PROJECT_NAME}
 )
 
