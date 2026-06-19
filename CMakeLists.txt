@@ -17,6 +17,7 @@ find_package(fs_msgs REQUIRED)
 add_executable(pointcloud_rgb
         src/pointcloud_rgb.cpp
 )
+
 ament_target_dependencies(pointcloud_rgb rclcpp sensor_msgs fs_msgs)
 target_link_libraries(pointcloud_rgb ${OpenCV_LIBS})
 
@@ -53,6 +54,12 @@ install(
         PROGRAMS 
         src/can_publisher_node.py
         DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
+        DIRECTORY
+        can_bus
+        DESTINATION lib/${PROJECT_NAME} 
 )
 
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})

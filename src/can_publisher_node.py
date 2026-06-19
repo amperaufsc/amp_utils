@@ -1,13 +1,13 @@
+#!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-from src.can_reader import StateCanReader
+from can_bus.can_reader import StateCanReader
 from fs_msgs.msg import ControlCommand, GoSignal
 from std_msgs.msg import Float32, UInt8, UInt16
 
 class CanPublisherNode(Node):
     def __init__(self):
         super().__init__('can_publisher_node')
-
         self.can_reader = StateCanReader()
 
         self.go_publisher = self.create_publisher(GoSignal, "/signal/go", 10)
@@ -24,25 +24,28 @@ class CanPublisherNode(Node):
         self.float_publishers = {
             "/can/steering_angle": self.create_publisher(UInt16, "/can/steering_angle", 10)
         }
-
     def can_publish(self):
-        message = self.can_reader.receive_message()
-    
-        if message == None:
-            self.get_logger().debug(f'Nenhuma Mensagem Recebida')
-            return
+        try:
+            message = self.can_reader.receive_message()
         
-        can_data = self.can_reader.can_reader(message)
+            if message == None:
+                self.get_logger().info(f'Nenhuma Mensagem Recebida')
+                return
+            
+            can_data = self.can_reader.can_reader(message)
+            self.get_logger().info(f'{can_data}')
 
-        self.publish_uint8_data(can_data)
-        self.publish_float_data(can_data)
+            self.uint8_publish(can_data)
+            self.float_publish(can_data)
 
-        go_data = can_data.get("go_state")
-        self.get_logger().debug(f'{go_data}')  
-        if go_data == 1:
-            go_message = GoSignal()
-            go_message.mission = "test"
-            self.go_publisher.publish(go_message)
+            go_data = can_data.get("go_state")
+            self.get_logger().debug(f'{go_data}')  
+            if go_data == 1:
+                go_message = GoSignal()
+                go_message.mission = "test"
+                self.go_publisher.publish(go_message)
+        except Exception as e:
+            self.get_logger().debug(f'{e}')
 
     def uint8_publish(self, can_data):
         uint8_signals = {
@@ -52,13 +55,13 @@ class CanPublisherNode(Node):
             "go_signal": "/can/go_signal",
         }
 
-        for signal, topic in uint8_signals:
+        for signal, topic in uint8_signals.items():
             try:
                 if can_data.get(signal):
                     msg = UInt8()
                     msg.data = int(can_data[signal])
                     self.uint8_publishers[topic].publish(msg)
-                    self.get_logger().debug(f'Mensagem {msg.data} publicada para {topic}')
+                    self.get_logger().info(f'Mensagem {msg.data} publicada para {topic}')
             except  Exception as e:
                 self.get_logger().warn(f'Erro {e} ao publicar {signal}')
 
@@ -67,7 +70,7 @@ class CanPublisherNode(Node):
         float_signals = {
             "steering_angle": "/can/steering_angle",
         }
-        for signal, topic in float_signals:
+        for signal, topic in float_signals.items():
             try:
                 if can_data.get(signal):
                     msg = Float32()
