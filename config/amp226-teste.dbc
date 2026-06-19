@@ -1,0 +1,156 @@
+VERSION ""
+
+
+NS_ : 
+	NS_DESC_
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	CAT_DEF_
+	CAT_
+	FILTER
+	BA_DEF_DEF_
+	EV_DATA_
+	ENVVAR_DATA_
+	SGTYPE_
+	SGTYPE_VAL_
+	BA_DEF_SGTYPE_
+	BA_SGTYPE_
+	SIG_TYPE_REF_
+	VAL_TABLE_
+	SIG_GROUP_
+	SIG_VALTYPE_
+	SIGTYPE_VALTYPE_
+	BO_TX_BU_
+	BA_DEF_REL_
+	BA_REL_
+	BA_DEF_DEF_REL_
+	BU_SG_REL_
+	BU_EV_REL_
+	BU_BO_REL_
+	SG_MUL_VAL_
+
+BS_:
+
+BU_: ECU PAINEL RES JETSON DATALOGGER
+
+
+BO_ 288 ECU_Status: 8 ECU
+ SG_ ControlWord : 40|16@1+ (1,0) [0|0] ""  JETSON,DATALOGGER
+ SG_ InverterStatus : 32|8@1+ (1,0) [0|0] ""  JETSON,DATALOGGER
+ SG_ TMSErrorCode : 24|8@1+ (1,0) [0|0] ""  JETSON,DATALOGGER
+ SG_ CurrentState : 16|8@1+ (1,0) [0|0] ""  JETSON,DATALOGGER
+ SG_ ECUErrorCode : 8|8@1+ (1,0) [0|0] ""  JETSON,DATALOGGER
+ SG_ InverterErrorCode : 0|8@1+ (1,0) [0|0] ""  JETSON,DATALOGGER
+
+BO_ 1056 MotorData: 8 ECU
+ SG_ MotorRPM : 0|16@1+ (1,0) [0|0] "RPM"  DATALOGGER
+ SG_ MotorTemperature : 16|16@1+ (1,0) [0|0] "degC"  DATALOGGER
+ SG_ MotorTorque : 32|16@1+ (1,0) [0|0] "Nm"  DATALOGGER
+ SG_ InverterTemperature : 48|16@1+ (1,0) [0|0] "degC"  DATALOGGER
+
+BO_ 544 CurrentData: 8 ECU
+ SG_ InverterCurrent : 0|32@1- (0.1,0) [0|0] "A"  DATALOGGER
+ SG_ BatteryCurrent : 32|32@1- (0.1,0) [0|0] "A"  DATALOGGER
+
+BO_ 1057 VoltageData: 8 ECU
+ SG_ InverterVoltage : 0|32@1+ (0.1,0) [0|0] "V"  DATALOGGER
+ SG_ BatteryVoltage : 32|32@1+ (0.1,0) [0|0] "V"  DATALOGGER
+
+BO_ 289 VehicleStatus: 8 ECU
+ SG_ MaxTemperature : 56|8@1- (1,0) [0|0] "degC"  DATALOGGER
+ SG_ BrakeSwitch : 48|1@1+ (1,0) [0|0] ""  DATALOGGER
+ SG_ BrakePedal : 40|7@1+ (1,0) [0|0] "%"  DATALOGGER
+ SG_ AcceleratorPedal : 32|8@1+ (1,0) [0|0] "%"  DATALOGGER
+ SG_ StateOfCharge : 24|8@1+ (1,0) [0|0] "%"  DATALOGGER
+ SG_ MaxCellVoltage : 16|8@1+ (10,0) [0|0] "mV"  DATALOGGER
+ SG_ AvgCellVoltage : 8|8@1+ (10,0) [0|0] "mV"  DATALOGGER
+ SG_ MinCellVoltage : 0|8@1+ (10,0) [0|0] "mV"  DATALOGGER
+
+BO_ 321 PAINEL_RTD: 1 PAINEL
+ SG_ ReadyToDrive : 0|1@1+ (1,0) [0|0] ""  DATALOGGER
+
+BO_ 839 PAINEL_MODE: 1 PAINEL
+ SG_ AutonomousMode : 0|3@1+ (1,0) [0|0] ""  DATALOGGER,JETSON
+
+BO_ 1355 PAINEL__PAGE: 1 PAINEL
+ SG_ PageID : 0|4@1+ (1,0) [0|0] ""  DATALOGGER
+
+BO_ 1185 STEERING_DATA: 5 DATALOGGER
+ SG_ SteeringAngle : 0|32@1- (0.1,0) [0|0] "deg"  JETSON
+ SG_ LimitSwitchLeft : 32|1@1+ (1,0) [0|0] ""  JETSON
+ SG_ LimitSwitchRight : 33|1@1+ (1,0) [0|0] ""  JETSON
+
+BO_ 1186 IMUAcceleration: 6 DATALOGGER
+ SG_ AccelX : 0|16@1- (0.001,0) [0|0] "m/s²"  JETSON
+ SG_ AccelY : 16|16@1- (0.001,0) [0|0] "m/s²"  JETSON
+ SG_ AccelZ : 32|16@1- (0.001,0) [0|0] "m/s²"  JETSON
+
+BO_ 1187 RearWheelEncoders: 8 DATALOGGER
+ SG_ EncoderRearLeft : 32|32@1- (1,0) [0|0] "km/h"  JETSON
+ SG_ EncoderRearRight : 0|32@1- (1,0) [0|0] "km/h"  JETSON
+
+BO_ 1188 FrontWheelEncoders: 8 DATALOGGER
+ SG_ EncoderFrontRight : 0|32@1- (1,0) [0|0] "km/h"  JETSON
+ SG_ EncoderFrontLeft : 32|32@1- (1,0) [0|0] "km/h"  JETSON
+
+BO_ 393 RESControl: 8 RES
+ SG_ ASStatus : 0|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ GOSignal : 8|8@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 865 Jetson: 8 JETSON
+ SG_ ModoDeProva : 0|8@1+ (1,0) [0|0] "" Vector__XXX
+
+BO_ 137 RESEmergency: 8 RES
+ SG_ ASEmergency : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+
+
+
+CM_ BU_ ECU "Main controller";
+CM_ BO_ 288 "10 Hz";
+CM_ BO_ 1056 "10 Hz";
+CM_ BO_ 544 "10 Hz";
+CM_ BO_ 1057 "10 Hz";
+CM_ BO_ 289 "10 Hz";
+CM_ BO_ 321 "5 Hz
+";
+CM_ BO_ 839 "5 Hz
+
+";
+CM_ BO_ 1355 "5 Hz
+";
+CM_ BO_ 1185 "60 Hz
+";
+CM_ BO_ 1186 "60 Hz
+";
+CM_ BO_ 1187 "60 Hz
+";
+CM_ BO_ 1188 "60 Hz
+";
+CM_ BO_ 393 "100 Hz";
+CM_ BO_ 865 "10 Hz";
+CM_ BO_ 137 "100 Hz
+";
+BA_DEF_  "BusType" STRING ;
+BA_DEF_DEF_  "BusType" "CAN";
+VAL_ 288 CurrentState 0 "HV_OFF" 1 "NOT_RTD" 2 "ALMOST_RTD" 3 "RTD" ;
+VAL_ 288 ECUErrorCode 0 "NoError" 1 "DefinedErrors" ;
+VAL_ 288 InverterErrorCode 0 "NoError" 1 "DefinedErrors" ;
+VAL_ 289 BrakeSwitch 0 "Released" 1 "Pressed" ;
+VAL_ 321 ReadyToDrive 0 "Disabled" 1 "Enabled" ;
+VAL_ 839 AutonomousMode 1 "CHECK" 2 "CALIBRATION" 3 "TRACKDRIVE" 4 "SKIDPAD" 5 "ACCELERATION" 6 "AUTOCROSS" 7 "Start 
+INSPEÇÃO
+
+" ;
+VAL_ 1355 PageID 0 "Capa" 1 "TestesElétrica" 2 "ModoDeProva" 3 "MenuSA" 4 "TestesSA" 5 "AutoCrossSA" 6 "AceleraçãoSA" 7 "SkidpadSA" 8 "TrackDriveSA" 9 "TesteEBS" 10 "InspeçãoSA" ;
+VAL_ 1185 LimitSwitchLeft 0 "Released" 1 "Pressed" ;
+VAL_ 1185 LimitSwitchRight 0 "Released" 1 "Pressed" ;
+SIG_VALTYPE_ 544 InverterCurrent : 1;
+SIG_VALTYPE_ 544 BatteryCurrent : 1;
+SIG_VALTYPE_ 1185 SteeringAngle : 1;
+SIG_VALTYPE_ 1187 EncoderRearLeft : 1;
+SIG_VALTYPE_ 1187 EncoderRearRight : 1;
+SIG_VALTYPE_ 1188 EncoderFrontRight : 1;
+SIG_VALTYPE_ 1188 EncoderFrontLeft : 1;
+
