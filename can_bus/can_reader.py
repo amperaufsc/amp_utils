@@ -16,11 +16,30 @@ class StateCanReader():
         self.db = cantools.database.load_file(DBC_FILE)
 
         filters = [
+            #painel
             {"can_id": 321, "can_mask": 0x7FF, "extended": False},
             {"can_id": 839, "can_mask": 0x7FF, "extended": False},
             {"can_id": 1355, "can_mask": 0x7FF, "extended": False},
+
+            #RES
             {"can_id": 393, "can_mask": 0x7FF, "extended": False},
-            #{"can_id": 1185, "can_mask": 0x7FF, "extended": False},
+            {"can_id": 137, "can_mask": 0x7FF, "extended": False},
+
+            #DataLogger
+            {"can_id": 1185, "can_mask": 0x7FF, "extended": False},
+            {"can_id": 1186, "can_mask": 0x7FF, "extended": False},
+            {"can_id": 1187, "can_mask": 0x7FF, "extended": False},
+            {"can_id": 1188, "can_mask": 0x7FF, "extended": False},
+
+            #Jetson
+            {"can_id": 865, "can_mask": 0x7FF, "extended": False},
+
+            #ECU
+            {"can_id": 288, "can_mask": 0x7FF, "extended": False},
+            {"can_id": 1056, "can_mask": 0x7FF, "extended": False},
+            {"can_id": 544, "can_mask": 0x7FF, "extended": False},
+            {"can_id": 1057, "can_mask": 0x7FF, "extended": False},
+            {"can_id": 289, "can_mask": 0x7FF, "extended": False},
         ]
 
         self.logger = logging.getLogger('CAN_Reader')
@@ -46,11 +65,16 @@ class StateCanReader():
         values = {
 
             #RES
-            'AS_status': None,
-            'go_signal': None,
+            'ASStatus': None,
+            'GoSignal': None,
+            'Emergency': None,
 
             #DataLogger
-            'steering_angle': None,
+            'SteeringAngle': None,
+            'LimitSwitchLeft': None,
+            'LimitSwitchRight': None,
+            'SteeringAngle': None,
+            ''
 
             #Painel
             'ready_to_drive': None,
