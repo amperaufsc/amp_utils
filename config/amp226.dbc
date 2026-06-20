@@ -83,9 +83,9 @@ BO_ 1185 STEERING_DATA: 5 DATALOGGER
  SG_ LimitSwitchRight : 33|1@1+ (1,0) [0|0] ""  JETSON
 
 BO_ 1186 IMUAcceleration: 6 DATALOGGER
- SG_ AccelX : 0|16@1- (0.001,0) [0|0] "m/s²"  JETSON
- SG_ AccelY : 16|16@1- (0.001,0) [0|0] "m/s²"  JETSON
- SG_ AccelZ : 32|16@1- (0.001,0) [0|0] "m/s²"  JETSON
+ SG_ AccelX : 0|16@1- (0.001,0) [0|0] "m/sï¿½"  JETSON
+ SG_ AccelY : 16|16@1- (0.001,0) [0|0] "m/sï¿½"  JETSON
+ SG_ AccelZ : 32|16@1- (0.001,0) [0|0] "m/sï¿½"  JETSON
 
 BO_ 1187 RearWheelEncoders: 8 DATALOGGER
  SG_ EncoderRearLeft : 32|32@1- (1,0) [0|0] "km/h"  JETSON
@@ -140,15 +140,15 @@ VAL_ 288 InverterErrorCode 0 "NoError" 1 "DefinedErrors" ;
 VAL_ 289 BrakeSwitch 0 "Released" 1 "Pressed" ;
 VAL_ 321 ReadyToDrive 0 "Disabled" 1 "Enabled" ;
 VAL_ 839 AutonomousMode 1 "Start Testes Geral" 2 "Start Autocross
-" 3 "Start Aceleração" 4 "Start Skidpad
+" 3 "Start Aceleraï¿½ï¿½o" 4 "Start Skidpad
 " 5 "Start Track Drive
 " 6 "Start 
 EBS TESTE
 " 7 "Start 
-INSPEÇÃO
+INSPEï¿½ï¿½O
 
 " ;
-VAL_ 1355 PageID 0 "Capa" 1 "TestesElétrica" 2 "ModoDeProva" 3 "MenuSA" 4 "TestesSA" 5 "AutoCrossSA" 6 "AceleraçãoSA" 7 "SkidpadSA" 8 "TrackDriveSA" 9 "TesteEBS" 10 "InspeçãoSA" ;
+VAL_ 1355 PageID 0 "Capa" 1 "TestesElï¿½trica" 2 "ModoDeProva" 3 "MenuSA" 4 "TestesSA" 5 "AutoCrossSA" 6 "Aceleraï¿½ï¿½oSA" 7 "SkidpadSA" 8 "TrackDriveSA" 9 "TesteEBS" 10 "Inspeï¿½ï¿½oSA" ;
 VAL_ 1185 LimitSwitchLeft 0 "Released" 1 "Pressed" ;
 VAL_ 1185 LimitSwitchRight 0 "Released" 1 "Pressed" ;
 SIG_VALTYPE_ 544 InverterCurrent : 1;
