@@ -31,9 +31,6 @@ class StateCanReader():
             {"can_id": 1187, "can_mask": 0x7FF, "extended": False},
             {"can_id": 1188, "can_mask": 0x7FF, "extended": False},
 
-            #Jetson
-            {"can_id": 865, "can_mask": 0x7FF, "extended": False},
-
             #ECU
             {"can_id": 288, "can_mask": 0x7FF, "extended": False},
             {"can_id": 1056, "can_mask": 0x7FF, "extended": False},
@@ -65,12 +62,12 @@ class StateCanReader():
         values = {
             #ECU
             'ControlWord': None,
-            'InverterSatus': None,
+            'InverterStatus': None,
             'TMSErrorCode': None,
             'CurrentState': None,
             'ECUErrorCode': None,
             'InverterErrorCode': None,
-            
+
             'MaxTemperature': None,
             'BrakeSwitch': None,
             'BrakePedal': None,
@@ -93,7 +90,7 @@ class StateCanReader():
 
             #RES
             'ASStatus': None,
-            'GoSignal': None,
+            'GOSignal': None,
 
             'ASEmergency': None,
 
@@ -115,33 +112,78 @@ class StateCanReader():
             #Painel
             'ReadyToDrive': None,
             'AutonomousMode': None,
-            'PageId' : None,
-
-            #Jetson
-            'AutonomousModeJetson': None,
+            'PageID' : None,
         }
 
         try:
             match message.arbitration_id:
-                
+                #Painel
                 case 321:
-                    for key in ['ready_to_drive']:
+                    for key in ['ReadyToDrive']:
                         if key in can_message:
                             values[key] = can_message[key]
 
                 case 839:
-                    for key in ['task_mode']:
+                    for key in ['AutonomousMode']:
                         if key in can_message:
                             values[key] = can_message[key]
 
-
+                case 1355:
+                    for key in ['PageID']:
+                        if key in can_message:
+                            values[key] = can_message[key]
+                #RES
                 case 393:
-                    for key in ['go_signal', 'AS_status']:
+                    for key in ['GOSignal', 'ASStatus']:
                         if key in can_message:
                             values[key] = can_message[key]
 
+                case 137:
+                    for key in ['ASEmergency']:
+                        if key in can_message:
+                            values[key] = can_message[key]
+                #DataLogger
                 case 1185:
-                    for key in ['steering_angle']:
+                    for key in ['SteeringAngle', 'LimitSwitchLeft', 'LimitSwitchRight']:
+                        if key in can_message:
+                            values[key] = can_message[key]
+
+                case 1186:
+                    for key in ['AccelX', 'AccelY', 'AccelZ']:
+                        if key in can_message:
+                            values[key] = can_message[key]
+
+                case 1187:
+                    for key in ['EncoderRearLeft', 'EncoderRearRight']:
+                        if key in can_message:
+                            values[key] = can_message[key]
+
+                case 1188:
+                    for key in ['EncoderFrontLeft', 'EncoderFrontRight']:
+                        if key in can_message:
+                            values[key] = can_message[key]
+                #ECU
+                case 288:
+                    for key in ['ControlWord', 'InverterStatus', 'TMSErrorCode', 'CurrentState', 'ECUErrorCode', 'InverterErrorCode']:
+                        if key in can_message:
+                            values[key] = can_message[key]
+
+                case 544:
+                    for key in ['InverterCurrent', 'BatteryCurrent']:
+                        if key in can_message:
+                            values[key] = can_message[key]
+
+                case 1056:
+                    for key in ['MotorRPM', 'MotorTemperature', 'MotorTorque', 'InverterTemperature']:
+                        if key in can_message:
+                            values[key] = can_message[key]
+
+                case 1057:
+                    for key in ['InverterVoltage', 'BatteryVoltage']:
+                        if key in can_message:
+                            values[key] = can_message[key]
+                case 289:
+                    for key in ['MaxTemperature', 'BrakeSwitch', 'BrakePedal', 'AcceleratorPedal', 'StateOfCharge', 'MaxCellVoltage', 'AvgCellVoltage', 'MinCellVoltage']:
                         if key in can_message:
                             values[key] = can_message[key]
 
