@@ -45,37 +45,37 @@ BO_ 288 ECU_Status: 8 ECU
  SG_ InverterErrorCode : 0|8@1+ (1,0) [0|0] ""  JETSON,DATALOGGER
 
 BO_ 1056 MotorData: 8 ECU
- SG_ MotorRPM : 0|16@1+ (1,0) [0|0] "RPM"  DATALOGGER
- SG_ MotorTemperature : 16|16@1+ (1,0) [0|0] "degC"  DATALOGGER
- SG_ MotorTorque : 32|16@1+ (1,0) [0|0] "Nm"  DATALOGGER
- SG_ InverterTemperature : 48|16@1+ (1,0) [0|0] "degC"  DATALOGGER
+ SG_ MotorRPM : 0|16@1+ (1,0) [0|0] "RPM"  DATALOGGER,JETSON
+ SG_ MotorTemperature : 16|16@1+ (1,0) [0|0] "degC"  DATALOGGER,JETSON
+ SG_ MotorTorque : 32|16@1+ (1,0) [0|0] "Nm"  DATALOGGER,JETSON
+ SG_ InverterTemperature : 48|16@1+ (1,0) [0|0] "degC"  DATALOGGER,JETSON
 
 BO_ 544 CurrentData: 8 ECU
- SG_ InverterCurrent : 0|32@1- (0.1,0) [0|0] "A"  DATALOGGER
- SG_ BatteryCurrent : 32|32@1- (0.1,0) [0|0] "A"  DATALOGGER
+ SG_ InverterCurrent : 0|32@1- (0.1,0) [0|0] "A"  DATALOGGER,JETSON
+ SG_ BatteryCurrent : 32|32@1- (0.1,0) [0|0] "A"  DATALOGGER,JETSON
 
 BO_ 1057 VoltageData: 8 ECU
- SG_ InverterVoltage : 0|32@1+ (0.1,0) [0|0] "V"  DATALOGGER
- SG_ BatteryVoltage : 32|32@1+ (0.1,0) [0|0] "V"  DATALOGGER
+ SG_ InverterVoltage : 0|32@1+ (0.1,0) [0|0] "V"  DATALOGGER,JETSON
+ SG_ BatteryVoltage : 32|32@1+ (0.1,0) [0|0] "V"  DATALOGGER,JETSON
 
 BO_ 289 VehicleStatus: 8 ECU
- SG_ MaxTemperature : 56|8@1- (1,0) [0|0] "degC"  DATALOGGER
- SG_ BrakeSwitch : 48|1@1+ (1,0) [0|0] ""  DATALOGGER
- SG_ BrakePedal : 40|7@1+ (1,0) [0|0] "%"  DATALOGGER
- SG_ AcceleratorPedal : 32|8@1+ (1,0) [0|0] "%"  DATALOGGER
- SG_ StateOfCharge : 24|8@1+ (1,0) [0|0] "%"  DATALOGGER
- SG_ MaxCellVoltage : 16|8@1+ (10,0) [0|0] "mV"  DATALOGGER
- SG_ AvgCellVoltage : 8|8@1+ (10,0) [0|0] "mV"  DATALOGGER
- SG_ MinCellVoltage : 0|8@1+ (10,0) [0|0] "mV"  DATALOGGER
+ SG_ MaxTemperature : 56|8@1- (1,0) [0|0] "degC"  DATALOGGER,JETSON
+ SG_ BrakeSwitch : 48|1@1+ (1,0) [0|0] ""  DATALOGGER,JETSON
+ SG_ BrakePedal : 40|7@1+ (1,0) [0|0] "%"  DATALOGGER,JETSON
+ SG_ AcceleratorPedal : 32|8@1+ (1,0) [0|0] "%"  DATALOGGER,JETSON
+ SG_ StateOfCharge : 24|8@1+ (1,0) [0|0] "%"  DATALOGGER,JETSON
+ SG_ MaxCellVoltage : 16|8@1+ (10,0) [0|0] "mV"  DATALOGGER,JETSON
+ SG_ AvgCellVoltage : 8|8@1+ (10,0) [0|0] "mV"  DATALOGGER,JETSON
+ SG_ MinCellVoltage : 0|8@1+ (10,0) [0|0] "mV"  DATALOGGER,JETSON
 
 BO_ 321 PAINEL_RTD: 1 PAINEL
- SG_ ReadyToDrive : 0|1@1+ (1,0) [0|0] ""  DATALOGGER
+ SG_ ReadyToDrive : 0|1@1+ (1,0) [0|0] ""  DATALOGGER,JETSON
 
 BO_ 839 PAINEL_MODE: 1 PAINEL
  SG_ AutonomousMode : 0|3@1+ (1,0) [0|0] ""  DATALOGGER,JETSON
 
 BO_ 1355 PAINEL__PAGE: 1 PAINEL
- SG_ PageID : 0|4@1+ (1,0) [0|0] ""  DATALOGGER
+ SG_ PageID : 0|4@1+ (1,0) [0|0] ""  DATALOGGER,JETSON
 
 BO_ 1185 STEERING_DATA: 5 DATALOGGER
  SG_ SteeringAngle : 0|32@1- (0.1,0) [0|0] "deg"  JETSON
@@ -96,14 +96,14 @@ BO_ 1188 FrontWheelEncoders: 8 DATALOGGER
  SG_ EncoderFrontLeft : 32|32@1- (1,0) [0|0] "km/h"  JETSON
 
 BO_ 393 RESControl: 8 RES
- SG_ ASStatus : 0|8@1+ (1,0) [0|0] "" Vector__XXX
- SG_ GOSignal : 8|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ ASStatus : 0|8@1+ (1,0) [0|0] ""  JETSON
+ SG_ GOSignal : 8|8@1+ (1,0) [0|0] ""  JETSON
 
 BO_ 865 Jetson: 8 JETSON
- SG_ ModoDeProva : 0|8@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ AutonomousModeJetson : 0|8@1+ (1,0) [0|0] "" Vector__XXX
 
 BO_ 137 RESEmergency: 8 RES
- SG_ ASEmergency : 0|1@1+ (1,0) [0|0] "" Vector__XXX
+ SG_ ASEmergency : 0|1@1+ (1,0) [0|0] ""  JETSON
 
 
 
