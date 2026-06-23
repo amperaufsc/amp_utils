@@ -63,22 +63,62 @@ class StateCanReader():
             raise RuntimeError(e) from e
 
         values = {
+            #ECU
+            'ControlWord': None,
+            'InverterSatus': None,
+            'TMSErrorCode': None,
+            'CurrentState': None,
+            'ECUErrorCode': None,
+            'InverterErrorCode': None,
+            
+            'MaxTemperature': None,
+            'BrakeSwitch': None,
+            'BrakePedal': None,
+            'AcceleratorPedal': None,
+            'StateOfCharge': None,
+            'MaxCellVoltage': None,
+            'AvgCellVoltage': None,
+            'MinCellVoltage': None,
+
+            'InverterCurrent': None,
+            'BatteryCurrent': None,
+
+            'InverterVoltage': None,
+            'BatteryVoltage': None,
+
+            'MotorRPM': None,
+            'MotorTemperature': None,
+            'MotorTorque': None,
+            'InverterTemperature': None,
 
             #RES
             'ASStatus': None,
             'GoSignal': None,
-            'Emergency': None,
+
+            'ASEmergency': None,
 
             #DataLogger
             'SteeringAngle': None,
             'LimitSwitchLeft': None,
             'LimitSwitchRight': None,
-            'SteeringAngle': None,
-            ''
+
+            'EncoderFrontRight': None,
+            'EncoderFrontLeft': None,
+
+            'EncoderRearLeft': None,
+            'EncoderRearRight': None,
+
+            'AccelX': None,
+            'AccelY': None,
+            'AccelZ': None,
 
             #Painel
-            'ready_to_drive': None,
-            'task_mode': None,
+            'ReadyToDrive': None,
+            'AutonomousMode': None,
+            'PageId' : None,
+
+            #Jetson
+            'AutonomousModeJetson': None,
         }
 
         try:
