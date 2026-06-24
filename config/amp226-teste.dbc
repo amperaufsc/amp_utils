@@ -69,7 +69,7 @@ BO_ 289 VehicleStatus: 8 ECU
  SG_ MinCellVoltage : 0|8@1+ (10,0) [0|0] "mV"  DATALOGGER,JETSON
 
 BO_ 321 PAINEL_RTD: 1 PAINEL
- SG_ ReadyToDrive : 0|1@1+ (1,0) [0|0] ""  DATALOGGER,JETSON
+ SG_ ReadyToDrive : 0|1@1+ (1,0) [0|0] "" Vector__XXX
 
 BO_ 839 PAINEL_MODE: 1 PAINEL
  SG_ AutonomousMode : 0|3@1+ (1,0) [0|0] ""  DATALOGGER,JETSON
@@ -105,6 +105,9 @@ BO_ 865 Jetson: 8 JETSON
 BO_ 137 RESEmergency: 8 RES
  SG_ ASEmergency : 0|1@1+ (1,0) [0|0] ""  JETSON
 
+BO_ 3221225472 VECTOR__INDEPENDENT_SIG_MSG: 0 Vector__XXX
+ SG_ a : 0|1@1+ (1,0) [0|0] ""  DATALOGGER,JETSON
+
 
 
 CM_ BU_ ECU "Main controller";
@@ -138,7 +141,6 @@ VAL_ 288 CurrentState 0 "HV_OFF" 1 "NOT_RTD" 2 "ALMOST_RTD" 3 "RTD" ;
 VAL_ 288 ECUErrorCode 0 "NoError" 1 "DefinedErrors" ;
 VAL_ 288 InverterErrorCode 0 "NoError" 1 "DefinedErrors" ;
 VAL_ 289 BrakeSwitch 0 "Released" 1 "Pressed" ;
-VAL_ 321 ReadyToDrive 0 "Disabled" 1 "Enabled" ;
 VAL_ 839 AutonomousMode 1 "CHECK" 2 "CALIBRATION" 3 "TRACKDRIVE" 4 "SKIDPAD" 5 "ACCELERATION" 6 "AUTOCROSS" 7 "Start 
 INSPEÇÃO
 
@@ -146,6 +148,7 @@ INSPEÇÃO
 VAL_ 1355 PageID 0 "Capa" 1 "TestesElétrica" 2 "ModoDeProva" 3 "MenuSA" 4 "TestesSA" 5 "AutoCrossSA" 6 "AceleraçãoSA" 7 "SkidpadSA" 8 "TrackDriveSA" 9 "TesteEBS" 10 "InspeçãoSA" ;
 VAL_ 1185 LimitSwitchLeft 0 "Released" 1 "Pressed" ;
 VAL_ 1185 LimitSwitchRight 0 "Released" 1 "Pressed" ;
+VAL_ 3221225472 a 0 "Disabled" 1 "Enabled" ;
 SIG_VALTYPE_ 544 InverterCurrent : 1;
 SIG_VALTYPE_ 544 BatteryCurrent : 1;
 SIG_VALTYPE_ 1057 InverterVoltage : 1;
