@@ -3,25 +3,24 @@ import rclpy
 from rclpy.node import Node
 from can_bus.reduced_can_reader import StateCanReader
 from fs_msgs.msg import ControlCommand, GoSignal
-from std_msgs.msg import Float32, UInt8, UInt16
+from std_msgs.msg import Float32, UInt8, UInt16, String
 
 class CanPublisherNode(Node):
     def __init__(self):
         super().__init__('can_publisher_node')
         self.can_reader = StateCanReader()
 
-        self.go_publisher = self.create_publisher(GoSignal, "/signal/go", 10)
+        self.go_publisher = self.create_publisher(String, "/can/autonomous_mode", 10)
 
         self.timer = self.create_timer(0.01, self.can_publish)
 
         self.uint8_publishers = {
             #Painel
             "/can/ready_to_drive": self.create_publisher(UInt8, "/can/ready_to_drive", 10),
-            "/can/autonomous_mode": self.create_publisher(UInt8, "/can/autonomous_mode", 10),
             "/can/page_id": self.create_publisher(UInt8, "/can/page_id", 10),
 
             #RES
-            "/can/AS_status": self.create_publisher(UInt8, "/can/AS_status", 10),
+            "/can/AS_status": self.create_publisher(UInt8, "/can/as_status", 10),
             "/can/go_signal": self.create_publisher(UInt8, "/can/go_signal", 10),
             "/can/emergency": self.create_publisher(UInt8, "/can/emergency", 10),
 
@@ -77,26 +76,26 @@ class CanPublisherNode(Node):
             message = self.can_reader.receive_message()
         
             if message == None:
-                self.get_logger().info(f'Nenhuma Mensagem Recebida')
+                #self.get_logger().info(f'Nenhuma Mensagem Recebida')
                 return
             
             can_data = self.can_reader.can_reader(message)
             if can_data is None:
                 return
-            self.get_logger().debug(f'{can_data}')
+            self.get_logger().info(f'{can_data}')
 
             self.uint8_publish(can_data)
             self.uint16_publish(can_data)
             self.float_publish(can_data)
 
-            mode = can_data.get("AutonomousMode")
+            mode = can_data["AutonomousMode"]
             self.get_logger().debug(f'{mode}')  
             if mode is not None:
-                go_message = GoSignal() 
-                go_message.mission = mode
+                go_message = String() 
+                go_message.data = str(mode)
                 self.go_publisher.publish(go_message)
         except Exception as e:
-            self.get_logger().debug(f'{e}')
+            self.get_logger().info(f'{e}')
 
     def uint8_publish(self, can_data):
         uint8_signals = {
@@ -106,7 +105,7 @@ class CanPublisherNode(Node):
             "PageID":"/can/page_id",
 
             #RES
-            "ASStatus": "/can/AS_status",
+            "ASStatus": "/can/as_status",
             "GOSignal": "/can/go_signal",
             "ASEmergency": "/can/emergency",
 
@@ -132,9 +131,9 @@ class CanPublisherNode(Node):
                     msg = UInt8()
                     msg.data = int(can_data[signal])
                     self.uint8_publishers[topic].publish(msg)
-                    self.get_logger().debug(f'Mensagem {msg.data} publicada para {topic}')
+                    self.get_logger().info(f'Mensagem {msg.data} publicada para {topic}')
             except  Exception as e:
-                self.get_logger().warn(f'Erro {e} ao publicar {signal}')
+                self.get_logger().debug(f'Erro {e} ao publicar {signal}')
 
     def uint16_publish(self, can_data):
         uint16_signals = {
@@ -153,9 +152,9 @@ class CanPublisherNode(Node):
                     msg = UInt16()
                     msg.data = int(can_data[signal])
                     self.uint16_publishers[topic].publish(msg)
-                    self.get_logger().debug(f'Mensagem {msg.data} publicada para {topic}')
+                    self.get_logger().info(f'Mensagem {msg.data} publicada para {topic}')
             except  Exception as e:
-                self.get_logger().warn(f'Erro {e} ao publicar {signal}')
+                self.get_logger().debug(f'Erro {e} ao publicar {signal}')
 
 
     def float_publish(self, can_data):
@@ -182,13 +181,13 @@ class CanPublisherNode(Node):
         }
         for signal, topic in float_signals.items():
             try:
-                if signal in can_data and can_data[signal] is not None:
+                if can_data[signal] is not None:
                     msg = Float32()
                     msg.data = float(can_data[signal])
                     self.float_publishers[topic].publish(msg)
-                    self.get_logger().debug(f'Mensagem {msg.data} publicada para {topic}')
+                    self.get_logger().info(f'Mensagem {msg.data} publicada para {topic}')
             except  Exception as e:
-                self.get_logger().warn(f'Erro {e} ao publicar {signal}')
+                self.get_logger().debug(f'Erro {e} ao publicar {signal}')
 
 
 def main(args=None):
