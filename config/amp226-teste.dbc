@@ -37,11 +37,11 @@ BU_: ECU PAINEL RES JETSON DATALOGGER
 
 
 BO_ 288 ECU_Status: 8 ECU
- SG_ ControlWord : 40|16@1+ (1,0) [0|0] ""  JETSON,DATALOGGER
- SG_ InverterStatus : 32|8@1+ (1,0) [0|0] ""  JETSON,DATALOGGER
- SG_ TMSErrorCode : 24|8@1+ (1,0) [0|0] ""  JETSON,DATALOGGER
- SG_ CurrentState : 16|8@1+ (1,0) [0|0] ""  JETSON,DATALOGGER
- SG_ ECUErrorCode : 8|8@1+ (1,0) [0|0] ""  JETSON,DATALOGGER
+ SG_ ControlWord : 48|16@1+ (1,0) [0|0] ""  JETSON,DATALOGGER
+ SG_ InverterStatus : 40|8@1+ (1,0) [0|0] ""  JETSON,DATALOGGER
+ SG_ TMSErrorCode : 32|8@1+ (1,0) [0|0] ""  JETSON,DATALOGGER
+ SG_ CurrentState : 24|8@1+ (1,0) [0|0] ""  JETSON,DATALOGGER
+ SG_ ECUErrorCode : 8|16@1+ (1,0) [0|0] ""  JETSON,DATALOGGER
  SG_ InverterErrorCode : 0|8@1+ (1,0) [0|0] ""  JETSON,DATALOGGER
 
 BO_ 1056 MotorData: 8 ECU
@@ -59,7 +59,7 @@ BO_ 1057 VoltageData: 8 ECU
  SG_ BatteryVoltage : 32|32@1+ (0.1,0) [0|0] "V"  DATALOGGER,JETSON
 
 BO_ 289 VehicleStatus: 8 ECU
- SG_ MaxTemperature : 56|8@1- (1,0) [0|0] "degC"  DATALOGGER,JETSON
+ SG_ MaxTemperature : 56|8@1+ (1,0) [0|0] "degC"  DATALOGGER,JETSON
  SG_ BrakeSwitch : 48|1@1+ (1,0) [0|0] ""  DATALOGGER,JETSON
  SG_ BrakePedal : 40|7@1+ (1,0) [0|0] "%"  DATALOGGER,JETSON
  SG_ AcceleratorPedal : 32|8@1+ (1,0) [0|0] "%"  DATALOGGER,JETSON
