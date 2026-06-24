@@ -9,7 +9,7 @@ from can_bus.can_proxy import CanBusCommunicator
 
 class StateCanReader():
     def __init__(self) -> None:
-        DBC_FILE = "src/amp_utils/config/can_AMP-226.dbc"
+        DBC_FILE = "src/amp_utils/config/amp226-teste.dbc"
         BUSTYPE = "socketcan"
         CHANNEL = "can1"
 
