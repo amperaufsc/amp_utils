@@ -85,7 +85,6 @@ class CanPublisherNode(Node):
 
             self.uint8_publish(can_data)
             self.uint16_publish(can_data)
-            self.int16_publish(can_data)
             self.float_publish(can_data)
 
             mode = can_data.get("AutonomousMode")
