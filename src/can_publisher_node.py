@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-from can_bus.can_reader import StateCanReader
+from can_bus.reduced_can_reader import StateCanReader
 from fs_msgs.msg import ControlCommand, GoSignal
 from std_msgs.msg import Float32, UInt8, UInt16
 
@@ -81,6 +81,8 @@ class CanPublisherNode(Node):
                 return
             
             can_data = self.can_reader.can_reader(message)
+            if can_data is None:
+                return
             self.get_logger().debug(f'{can_data}')
 
             self.uint8_publish(can_data)
