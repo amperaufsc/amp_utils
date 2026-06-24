@@ -14,20 +14,6 @@ find_package(fs_msgs REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
-add_executable(pointcloud_rgb
-        src/pointcloud_rgb.cpp
-)
-
-ament_target_dependencies(pointcloud_rgb rclcpp sensor_msgs fs_msgs)
-target_link_libraries(pointcloud_rgb ${OpenCV_LIBS})
-
-install(
-        PROGRAMS 
-        src/frequency_monitor_node.py
-        DESTINATION lib/${PROJECT_NAME}
-)
-
-
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
@@ -40,16 +26,6 @@ if(BUILD_TESTING)
   ament_lint_auto_find_test_dependencies()
 endif()
 
-install(TARGETS pointcloud_rgb
-        DESTINATION lib/${PROJECT_NAME})
-
-install(
-        PROGRAMS 
-        src/odom_plot_node.py
-        src/simulated_gps_error_node.py
-        src/simulated_yaw_error_node.py
-        DESTINATION lib/${PROJECT_NAME}
-)
 install(
         PROGRAMS 
         src/can_publisher_node.py
