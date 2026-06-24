@@ -42,14 +42,9 @@ class CanPublisherNode(Node):
         }
 
         self.uint16_publishers = {
-            #DataLogger
-            "/can/accel_x": self.create_publisher(UInt16, "/can/accel_x", 10),
-            "/can/accel_y": self.create_publisher(UInt16, "/can/accel_y", 10),
-            "/can/accel_z": self.create_publisher(UInt16, "/can/accel_z", 10),
-
             #ECU
             "/can/control_word": self.create_publisher(UInt16, "/can/control_word", 10),
-            "/can/ECU_error_code": self.create_publisher(UInt16, "/can/ECU_error_code", 10),
+            "/can/ecu_error_code": self.create_publisher(UInt16, "/can/ecu_error_code", 10),
 
             "/can/inverter_temperature": self.create_publisher(UInt16, "/can/inverter_temperature", 10),
             "/can/motor_torque": self.create_publisher(UInt16, "/can/motor_torque", 10),
@@ -66,6 +61,10 @@ class CanPublisherNode(Node):
 
             "/can/encoder_front_left": self.create_publisher(Float32, "/can/encoder_front_left", 10),
             "/can/encoder_front_right": self.create_publisher(Float32, "/can/encoder_front_right", 10),
+
+            "/can/accel_x": self.create_publisher(Float32, "/can/accel_x", 10),
+            "/can/accel_y": self.create_publisher(Float32, "/can/accel_y", 10),
+            "/can/accel_z": self.create_publisher(Float32, "/can/accel_z", 10),
 
             #ECU
             "/can/battery_current": self.create_publisher(Float32, "/can/battery_current", 10),
@@ -86,6 +85,7 @@ class CanPublisherNode(Node):
 
             self.uint8_publish(can_data)
             self.uint16_publish(can_data)
+            self.int16_publish(can_data)
             self.float_publish(can_data)
 
             mode = can_data.get("AutonomousMode")
@@ -107,6 +107,7 @@ class CanPublisherNode(Node):
             #RES
             "ASStatus": "/can/AS_status",
             "GOSignal": "/can/go_signal",
+            "ASEmergency": "/can/emergency",
 
             #ECU
             "InverterStatus": "/can/inverter_status",
@@ -136,14 +137,9 @@ class CanPublisherNode(Node):
 
     def uint16_publish(self, can_data):
         uint16_signals = {
-            #DataLogger
-            "AccelX": "/can/accel_x",
-            "AccelY": "/can/accel_y",
-            "AccelZ": "/can/accel_z",
-
             #ECU
             "ControlWord": "/can/control_word",
-            "ECUErrorCode": "/can/ECU_error_code",
+            "ECUErrorCode": "/can/ecu_error_code",
 
             "InverterTemperature": "/can/inverter_temperature",
             "MotorTorque": "/can/motor_torque",
@@ -160,6 +156,7 @@ class CanPublisherNode(Node):
             except  Exception as e:
                 self.get_logger().warn(f'Erro {e} ao publicar {signal}')
 
+
     def float_publish(self, can_data):
         float_signals = {
             # DataLogger
@@ -170,6 +167,10 @@ class CanPublisherNode(Node):
 
             "EncoderFrontLeft": "/can/encoder_front_left",
             "EncoderFrontRight": "/can/encoder_front_right",
+
+            "AccelX": "/can/accel_x",
+            "AccelY": "/can/accel_y",
+            "AccelZ": "/can/accel_z",
 
             # ECU
             "BatteryCurrent": "/can/battery_current",
