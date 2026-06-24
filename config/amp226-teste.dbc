@@ -55,8 +55,8 @@ BO_ 544 CurrentData: 8 ECU
  SG_ BatteryCurrent : 32|32@1- (0.1,0) [0|0] "A"  DATALOGGER,JETSON
 
 BO_ 1057 VoltageData: 8 ECU
- SG_ InverterVoltage : 0|32@1+ (0.1,0) [0|0] "V"  DATALOGGER,JETSON
- SG_ BatteryVoltage : 32|32@1+ (0.1,0) [0|0] "V"  DATALOGGER,JETSON
+ SG_ InverterVoltage : 0|32@1- (0.1,0) [0|0] "V"  DATALOGGER,JETSON
+ SG_ BatteryVoltage : 32|32@1- (0.1,0) [0|0] "V"  DATALOGGER,JETSON
 
 BO_ 289 VehicleStatus: 8 ECU
  SG_ MaxTemperature : 56|8@1+ (1,0) [0|0] "degC"  DATALOGGER,JETSON
@@ -148,6 +148,8 @@ VAL_ 1185 LimitSwitchLeft 0 "Released" 1 "Pressed" ;
 VAL_ 1185 LimitSwitchRight 0 "Released" 1 "Pressed" ;
 SIG_VALTYPE_ 544 InverterCurrent : 1;
 SIG_VALTYPE_ 544 BatteryCurrent : 1;
+SIG_VALTYPE_ 1057 InverterVoltage : 1;
+SIG_VALTYPE_ 1057 BatteryVoltage : 1;
 SIG_VALTYPE_ 1185 SteeringAngle : 1;
 SIG_VALTYPE_ 1187 EncoderRearLeft : 1;
 SIG_VALTYPE_ 1187 EncoderRearRight : 1;
