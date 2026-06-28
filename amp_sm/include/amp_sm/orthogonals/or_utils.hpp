@@ -22,19 +22,12 @@ public:
         
         // lista de nós que fazem parte do subsistema
         std::vector<std::string> nodes = {
-            "/check_node_lifecycle",
-            "/repeater_node"
+            "/check_node_lifecycle"
         };
 
         // lista de nós que precisam estar ativos ao sair de st_Off.
         std::vector<std::string> on_startup_nodes = {
-            "/repeater_node",
-            "/perception_lifecycle_node",
-            "/path_node",
-            "/control_node",
-            "/yolo_node",
             "/check_node_lifecycle"
-
             //...
         };
 

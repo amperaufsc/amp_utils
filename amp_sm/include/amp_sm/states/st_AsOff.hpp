@@ -27,12 +27,7 @@ struct st_AsOff : smacc2::SmaccState<st_AsOff, Amp_sm>
 
 
         std::vector<std::string> nodes_to_configure = {
-            "/check_node_lifecycle",
-            "/repeater_node",
-            "/perception_lifecycle_node",
-            "/path_node",
-            "/yolo_node",
-            "/control_node"
+            "/check_node_lifecycle"
         };
 
         configure_orthogonal<or_utils, CbChangeLifecycleGroup>(nodes_to_configure, 1);
