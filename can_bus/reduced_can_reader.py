@@ -26,7 +26,6 @@ class StateCanReader():
             {"can_id": 137, "can_mask": 0x7FF, "extended": False},
 
             #DataLogger
-            {"can_id": 1185, "can_mask": 0x7FF, "extended": False},
             {"can_id": 1186, "can_mask": 0x7FF, "extended": False},
             {"can_id": 1187, "can_mask": 0x7FF, "extended": False},
             {"can_id": 1188, "can_mask": 0x7FF, "extended": False},
@@ -60,18 +59,6 @@ class StateCanReader():
             return
         
         return can_message
-
-
-    def send_references_steering(self, values):
-        if 'Referencia' in values:
-            try:
-                ref_est_data = self.db.encode_message(528, {'Ref_Estercamento_Atuador': values['Referencia']})
-                self.can_listener.bus.send(
-                    can.Message(arbitration_id=528, data=ref_est_data, is_extended_id=False)
-                )
-            except Exception as e:
-                self.logger.error(f"Erro ao enviar Ref_Estercamento_Atuador: {e}")
-
 
     def send_references_throttle(self, values):
          if 'Velocidade' in values:
