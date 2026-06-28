@@ -78,7 +78,6 @@ BO_ 1355 PAINEL__PAGE: 1 PAINEL
  SG_ PageID : 0|4@1+ (1,0) [0|0] ""  DATALOGGER,JETSON
 
 BO_ 1185 STEERING_DATA: 5 DATALOGGER
- SG_ SteeringAngle : 0|32@1- (0.1,0) [0|0] "deg"  JETSON
  SG_ LimitSwitchLeft : 32|1@1+ (1,0) [0|0] ""  JETSON
  SG_ LimitSwitchRight : 33|1@1+ (1,0) [0|0] ""  JETSON
 
@@ -107,6 +106,7 @@ BO_ 137 RESEmergency: 8 RES
 
 BO_ 3221225472 VECTOR__INDEPENDENT_SIG_MSG: 0 Vector__XXX
  SG_ a : 0|1@1+ (1,0) [0|0] ""  DATALOGGER,JETSON
+ SG_ SteeringAngle : 0|32@1- (0.1,0) [0|0] "deg"  JETSON
 
 
 
@@ -150,9 +150,9 @@ SIG_VALTYPE_ 544 InverterCurrent : 1;
 SIG_VALTYPE_ 544 BatteryCurrent : 1;
 SIG_VALTYPE_ 1057 InverterVoltage : 1;
 SIG_VALTYPE_ 1057 BatteryVoltage : 1;
-SIG_VALTYPE_ 1185 SteeringAngle : 1;
 SIG_VALTYPE_ 1187 EncoderRearLeft : 1;
 SIG_VALTYPE_ 1187 EncoderRearRight : 1;
 SIG_VALTYPE_ 1188 EncoderFrontRight : 1;
 SIG_VALTYPE_ 1188 EncoderFrontLeft : 1;
+SIG_VALTYPE_ 3221225472 SteeringAngle : 1;
 
