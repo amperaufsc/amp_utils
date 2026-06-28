@@ -53,8 +53,6 @@ class CanPublisherNode(Node):
 
         self.float_publishers = {
             #DataLogger
-            "/can/steering_angle": self.create_publisher(Float32, "/can/steering_angle", 10),
-
             "/can/encoder_rear_left": self.create_publisher(Float32, "/can/encoder_rear_left", 10),
             "/can/encoder_rear_right": self.create_publisher(Float32, "/can/encoder_rear_right", 10),
 
@@ -160,8 +158,6 @@ class CanPublisherNode(Node):
     def float_publish(self, can_data):
         float_signals = {
             # DataLogger
-            "SteeringAngle": "/can/steering_angle",
-
             "EncoderRearLeft": "/can/encoder_rear_left",
             "EncoderRearRight": "/can/encoder_rear_right",
 
