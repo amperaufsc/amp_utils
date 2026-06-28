@@ -106,7 +106,6 @@ BO_ 137 RESEmergency: 8 RES
 
 BO_ 3221225472 VECTOR__INDEPENDENT_SIG_MSG: 0 Vector__XXX
  SG_ a : 0|1@1+ (1,0) [0|0] ""  DATALOGGER,JETSON
- SG_ SteeringAngle : 0|32@1- (0.1,0) [0|0] "deg"  JETSON
 
 
 
@@ -154,5 +153,4 @@ SIG_VALTYPE_ 1187 EncoderRearLeft : 1;
 SIG_VALTYPE_ 1187 EncoderRearRight : 1;
 SIG_VALTYPE_ 1188 EncoderFrontRight : 1;
 SIG_VALTYPE_ 1188 EncoderFrontLeft : 1;
-SIG_VALTYPE_ 3221225472 SteeringAngle : 1;
 
