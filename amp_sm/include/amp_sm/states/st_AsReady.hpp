@@ -56,17 +56,6 @@ struct st_AsReady : smacc2::SmaccState<st_AsReady, Amp_sm>
 
         //
         //
-
-        std::vector<std::string> nodes_to_configure = {
-            "/check_node_lifecycle",
-            "/repeater_node",
-            "/perception_lifecycle_node",
-            "/path_node",
-            "/yolo_node",
-            "/control_node"
-        };
-
-        configure_orthogonal<or_utils, CbChangeLifecycleGroup>(nodes_to_configure, 3);
         
     }
 

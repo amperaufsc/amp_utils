@@ -16,7 +16,7 @@ class TecladoCanNode(Node):
         
         # Cria os publishers para os tópicos específicos
         self.pub_mission_select_go = self.create_publisher(GoSignal, '/as_amp/mission_select/go', 10)
-        self.pub_mission_select = self.create_publisher(String, '/as_amp/mission_select', 10)
+        self.pub_mission_select = self.create_publisher(String, '/can/autonomous_mode', 10)
         self.pub_go = self.create_publisher(String, '/as_amp/go', 10)
         self.pub_finished = self.create_publisher(String, '/as_amp/finished', 10)
 

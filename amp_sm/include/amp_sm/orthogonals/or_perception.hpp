@@ -34,12 +34,6 @@ public:
         // listeners
 
         
-        this->createClient<amp_sm::ClCameraWatchdog>(std::vector<std::string> {
-            "/oak/left/image_raw",
-            "/oak/right/image_raw",
-            "/oak/stereo/image_raw"
-        });
-        
     }
 };
 } // namespace amp_sm

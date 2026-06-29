@@ -22,7 +22,7 @@ namespace amp_sm
     {
     public:
         ClMissionSelectListener()
-            : smacc2::client_bases::SmaccSubscriberClient<std_msgs::msg::String>("/as_amp/mission_select")
+            : smacc2::client_bases::SmaccSubscriberClient<std_msgs::msg::String>("/can/autonomous_mode")
         {
         }
 
