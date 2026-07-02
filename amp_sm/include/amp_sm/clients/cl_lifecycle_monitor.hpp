@@ -6,6 +6,7 @@
 #include <std_msgs/msg/string.hpp>
 #include <smacc2/smacc_client.hpp>
 #include <lifecycle_msgs/msg/transition_event.hpp>
+#include <sensor_msgs/msg/image.hpp>
 
 namespace amp_sm
 {
@@ -15,7 +16,7 @@ struct EvNodeDeactivated : boost::statechart::event<EvNodeDeactivated> {};
 struct EvNodeCrashed     : boost::statechart::event<EvNodeCrashed> {};
 
 struct EvAllNodesConfigured : boost::statechart::event<EvAllNodesConfigured> {};
-struct EvAllNodesInactive : boost::statechart::event<EvAllNodesInactive> {};
+struct EvAllNodesInactive   : boost::statechart::event<EvAllNodesInactive> {};
 struct EvAllNodesActivated  : boost::statechart::event<EvAllNodesActivated> {};
 
 class ClLifecycleMonitor : public smacc2::ISmaccClient
@@ -28,11 +29,8 @@ public:
 
     void onInitialize() override
     {
-        // 1. Criamos o publicador para o tópico de alertas do carro
-        // Usamos QoS 10 para garantir que a mensagem chega mesmo se houver tráfego
         alert_pub_ = getNode()->create_publisher<std_msgs::msg::String>("/as_amp/shutdown", 10);
 
-        // 2. Criamos os subscribers para ouvir as transições de cada nó
         for (const std::string & name : node_names_)
         {
             std::string topic_name = name + "/transition_event";
@@ -49,9 +47,7 @@ public:
 
 private:
     std::vector<std::string> node_names_;
-    std::vector<rclcpp::Subscription<lifecycle_msgs::msg::TransitionEvent>::SharedPtr> subs_;
-    
-    // Variável para guardar o nosso publicador
+    std::vector<rclcpp::Subscription<lifecycle_msgs::msg::TransitionEvent>::SharedPtr> subs_;    
     rclcpp::Publisher<std_msgs::msg::String>::SharedPtr alert_pub_;
 
     void messageCallback(const lifecycle_msgs::msg::TransitionEvent::SharedPtr msg, const std::string & node_name)
@@ -72,19 +68,13 @@ private:
         }
         else if (novo_estado == "finalized" || novo_estado == "unconfigured" || novo_estado == "errorprocessing")
         {
-            // Imprime no terminal local (para quem estiver a olhar para o ecrã)
-            RCLCPP_ERROR(getLogger(), "🚨 FALHA CRÍTICA: [%s] derrubado por [%s] 🚨", node_name.c_str(), gatilho.c_str());
+            RCLCPP_ERROR(getLogger(), "🚨 FALHA CRÍTICA: [%s] derrubado por [%s]", node_name.c_str(), gatilho.c_str());
 
-            // 3. Monta a mensagem e PUBLICA NO TÓPICO ROS para toda a rede ver
             std_msgs::msg::String alert_msg;
-            alert_msg.data = "CRITICAL FAULT | Node: " + node_name + 
-                             " | Trigger: " + gatilho + 
-                             " | Result: " + novo_estado;
+            alert_msg.data = node_name;
             
-            // Publica o erro!
             alert_pub_->publish(alert_msg);
 
-            // Avisa a máquina de estados para tomar uma atitude
             this->postEvent<EvNodeCrashed>(); 
         }
     }
@@ -100,6 +90,8 @@ public:
 
     void onInitialize() override
     {
+        shutdown_pub_ = getNode()->create_publisher<std_msgs::msg::String>("/as_amp/shutdown", 10);
+
         for (const std::string & name : node_names_)
         {
             node_states_[name] = "unknown";
@@ -119,18 +111,22 @@ private:
     std::vector<std::string> node_names_;
     std::vector<rclcpp::Subscription<lifecycle_msgs::msg::TransitionEvent>::SharedPtr> subs_;
     std::map<std::string, std::string> node_states_;
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr shutdown_pub_;
 
     void messageCallback(const lifecycle_msgs::msg::TransitionEvent::SharedPtr msg, const std::string & node_name)
     {
         std::string novo_estado = msg->goal_state.label;
+        std_msgs::msg::String alert_msg;
         
         node_states_[node_name] = novo_estado;
 
-        RCLCPP_INFO(getLogger(), "[Consenso -> %s] reportou estado: %s", node_name.c_str(), novo_estado.c_str());
+        RCLCPP_INFO(getLogger(), "✅ No %s: Novo estado: %s", node_name.c_str(), novo_estado.c_str());
 
         if (novo_estado == "errorprocessing" || novo_estado == "finalized")
-        {
-            RCLCPP_ERROR(getLogger(), " [Consenso] O no %s falhou! Abortando operacao em grupo.", node_name.c_str());
+        {   
+            RCLCPP_ERROR(getLogger(), "🚨 No %s: Falha ao ir para %s 🚨", node_name.c_str(), novo_estado.c_str());
+            alert_msg.data = node_name;
+            shutdown_pub_->publish(alert_msg);
             this->postEvent<EvNodeCrashed>();
             return;
         }
@@ -142,15 +138,14 @@ private:
     {
         bool all_configured = true;
         bool all_activated = true;
-        bool all_inactive = true; // NOVA FLAG
+        bool all_inactive = true;
 
         for (const auto & pair : node_states_)
         {
-            // O estado "inactive" significa que o nó está configurado, mas não ativo.
             if (pair.second != "inactive") 
             {
                 all_configured = false;
-                all_inactive = false; // Se alguém não for inactive, a flag cai
+                all_inactive = false;
             }
             if (pair.second != "active") 
             {
@@ -170,11 +165,83 @@ private:
             this->postEvent<EvAllNodesActivated>();
         }
 
-        // NOVO BLOCO
         if (all_inactive)
         {
             RCLCPP_INFO(getLogger(), " [Consenso] SUCESSO! Todos os nos estao INATIVOS.");
             this->postEvent<EvAllNodesInactive>();
+        }
+    }
+};
+
+class ClCameraWatchdog : public smacc2::ISmaccClient
+{
+public:
+    ClCameraWatchdog(const std::vector<std::string> & target_topics, double timeout_sec = 3.0)
+    : target_topics_(target_topics), timeout_sec_(timeout_sec)
+    {
+    }
+
+    void onInitialize() override
+    {   
+        shutdown_pub_ = getNode()->create_publisher<std_msgs::msg::String>("/as_amp/shutdown", 10);
+        rclcpp::Time now = getNode()->now();
+
+        auto qos = rclcpp::SensorDataQoS();
+        qos.keep_last(1);
+
+        for (const std::string & topic : target_topics_)
+        {
+            last_msg_times_[topic] = now;
+            is_crashed_[topic] = false;
+
+            auto sub = getNode()->create_subscription<sensor_msgs::msg::Image>(
+                topic, qos,
+                [this, topic](const sensor_msgs::msg::Image::SharedPtr) {
+                    this->last_msg_times_[topic] = this->getNode()->now();
+                }
+            );
+            subs_.push_back(sub);
+            
+            RCLCPP_INFO(getLogger(), "[Watchdog] A vigiar %s", topic.c_str());
+        }
+
+        timer_ = getNode()->create_wall_timer(
+            std::chrono::milliseconds(500),
+            std::bind(&ClCameraWatchdog::checkTimeout, this)
+        );
+    }
+
+private:
+    std::vector<std::string> target_topics_;
+    double timeout_sec_;
+    std::vector<rclcpp::Subscription<sensor_msgs::msg::Image>::SharedPtr> subs_;
+    std::map<std::string, rclcpp::Time> last_msg_times_;
+    std::map<std::string, bool> is_crashed_;
+    rclcpp::TimerBase::SharedPtr timer_;
+    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr shutdown_pub_;
+
+    void checkTimeout()
+    {
+        rclcpp::Time now = getNode()->now();
+
+        for (const std::string & topic : target_topics_)
+        {
+            if (is_crashed_[topic]) continue;
+
+            double elapsed_time = (now - last_msg_times_[topic]).seconds();
+
+            if (elapsed_time > timeout_sec_)
+            {
+                std_msgs::msg::String msg;
+                msg.data = "Camera Watchdog";
+
+                if (shutdown_pub_) shutdown_pub_->publish(msg);
+                
+                RCLCPP_ERROR(getLogger(), "🚨 %s WATCHDOG: SINAL PERDIDO!", topic.c_str());
+
+                is_crashed_[topic] = true;
+                this->postEvent<EvNodeCrashed>();
+            }
         }
     }
 };

@@ -2,18 +2,28 @@
 
 import rclpy
 from rclpy.lifecycle import Node, State, TransitionCallbackReturn
-from std_msgs.msg import String
+from std_msgs.msg import String, Bool
+from fs_msgs.msg import GoSignal
 
 class RosMsgRepeater(Node):
     def __init__(self):
-        # Inicializa a classe base de Lifecycle em vez do Node normal
         super().__init__('repeater_node')
         
-        # Variáveis locais iniciadas no construtor (sem alocar ROS 2 ainda)
-        self.current_mission = "NONE"
-        self.subscription = None
-        self.publisher_ = None
+        # Variáveis locais iniciadas no construtor
+        self.current_mission_translated = "NONE"
         self.timer = None
+        
+        # Dicionários para gerir Subscriptions e Publishers
+        self.subs = {}
+        self.pubs = {}
+
+        # Dicionário de conversão de Missões (simulando um Switch/Case)
+        self.mission_map = {
+            "TRACKDRIVE": "trackdrive",
+            "AUTOCROSS": "auto-cross",
+            "ACCELERATION": "acceleration",
+            "SKIDPAD": "skidpad"
+        }
         
         self.get_logger().info('Inicializando repeater node...')
 
@@ -25,38 +35,63 @@ class RosMsgRepeater(Node):
         try:
             self.get_logger().info('Configurando repeater node...')
             
-            # 1. Cria o Lifecycle Publisher (nasce desativado)
-            self.publisher_ = self.create_lifecycle_publisher(
-                String, 
-                '/as_amp/mission_selected', 
+            # --- PUBLISHERS ---
+            self.pubs['mission_go'] = self.create_lifecycle_publisher(
+                GoSignal, 
+                '/as_amp/mission_selected/go', 
                 10
             )
+            
+            self.pubs['go'] = self.create_lifecycle_publisher(Bool, '/as_amp/res/go_out', 10)
+            self.pubs['ready'] = self.create_lifecycle_publisher(Bool, '/as_amp/res/as_ready_out', 10)
+            self.pubs['emergency'] = self.create_lifecycle_publisher(Bool, '/as_amp/res/as_emergency_out', 10)
 
-            # 2. Cria o Subscriber (já pode ouvir, mas não publicamos nada ainda)
-            self.subscription = self.create_subscription(
+            # --- SUBSCRIBERS ---
+            self.subs['mission_select'] = self.create_subscription(
                 String,
                 '/as_amp/mission_select',
                 self.mission_command_callback,
                 10
             )
+            
+            self.subs['go'] = self.create_subscription(
+                Bool,
+                '/as_amp/res/go',
+                lambda msg: self.bool_repeater_callback(msg, 'go'),
+                10
+            )
+            
+            self.subs['ready'] = self.create_subscription(
+                Bool,
+                '/as_amp/res/as_ready',
+                lambda msg: self.bool_repeater_callback(msg, 'ready'),
+                10
+            )
+            
+            self.subs['emergency'] = self.create_subscription(
+                Bool,
+                '/as_amp/res/as_emergency',
+                lambda msg: self.bool_repeater_callback(msg, 'emergency'),
+                10
+            )
 
             return TransitionCallbackReturn.SUCCESS
-        
-        except Exception as e:
-            self.get_logger().error(f'❌ Erro ao ativar o nó: {e}')
             
+        except Exception as e:
+            self.get_logger().error(f'❌ Erro ao configurar o nó: {e}')
             return TransitionCallbackReturn.ERROR
 
     def on_activate(self, state: State) -> TransitionCallbackReturn:
         try:
             self.get_logger().info('Ativando repeater node...')
             super().on_activate(state)
-            timer_period = 0.1  # 10 Hz
+            
+            # Inicia o timer que repetirá a missão selecionada a 10 Hz
+            timer_period = 0.1  
             self.timer = self.create_timer(timer_period, self.timer_callback)
 
             return TransitionCallbackReturn.SUCCESS
-
-        
+            
         except Exception as e:
             self.get_logger().error(f'❌ Erro ao ativar o nó: {e}')
             return TransitionCallbackReturn.ERROR
@@ -64,71 +99,93 @@ class RosMsgRepeater(Node):
     def on_deactivate(self, state: State) -> TransitionCallbackReturn:
         try:
             self.get_logger().info('Desativando repeater node...')
-            
             super().on_deactivate(state)
             
-            # Destrói o timer para parar o processamento imediatamente
             if self.timer is not None:
                 self.timer.cancel()
                 self.destroy_timer(self.timer)
                 self.timer = None
                 
             return TransitionCallbackReturn.SUCCESS
+            
         except Exception as e:
-            self.get_logger().error(f'❌ Erro ao ativar o nó: {e}')
+            self.get_logger().error(f'❌ Erro ao desativar o nó: {e}')
             return TransitionCallbackReturn.ERROR
 
     def on_cleanup(self, state: State) -> TransitionCallbackReturn:
         try:
             self.get_logger().info('Desconfigurando repeater node...')
             
-            if self.subscription is not None:
-                self.destroy_subscription(self.subscription)
-                self.subscription = None
+            # Limpa todos os Subscribers
+            for sub in self.subs.values():
+                self.destroy_subscription(sub)
+            self.subs.clear()
                 
-            if self.publisher_ is not None:
-                self.destroy_publisher(self.publisher_)
-                self.publisher_ = None
+            # Limpa todos os Publishers
+            for pub in self.pubs.values():
+                self.destroy_publisher(pub)
+            self.pubs.clear()
                 
-            # Apaga a missão da memória
-            self.current_mission = "NONE"
+            self.current_mission_translated = "NONE"
             
             return TransitionCallbackReturn.SUCCESS
 
         except Exception as e:
-            self.get_logger().error(f'❌ Erro ao ativar o nó: {e}')
+            self.get_logger().error(f'❌ Erro ao desconfigurar (cleanup) o nó: {e}')
             return TransitionCallbackReturn.ERROR
         
     def on_shutdown(self, state: State) -> TransitionCallbackReturn:
-        self.get_logger().info('Shutdown repeater node...')
-        
-        if self.timer is not None:
-            self.timer.cancel()
-            self.destroy_timer(self.timer)
-        if self.subscription is not None:
-            self.destroy_subscription(self.subscription)
-        if self.publisher_ is not None:
-            self.destroy_publisher(self.publisher_)
+        try:
+            self.get_logger().info('Shutdown repeater node...')
             
-        return TransitionCallbackReturn.SUCCESS
+            if self.timer is not None:
+                self.timer.cancel()
+                self.destroy_timer(self.timer)
+                
+            for sub in self.subs.values():
+                self.destroy_subscription(sub)
+                
+            for pub in self.pubs.values():
+                self.destroy_publisher(pub)
+                
+            return TransitionCallbackReturn.SUCCESS
+            
+        except Exception as e:
+            self.get_logger().error(f'❌ Erro durante o shutdown do nó: {e}')
+            return TransitionCallbackReturn.ERROR
 
     # ========================================================================
     # LÓGICA DO NÓ (CALLBACKS)
     # ========================================================================
 
     def mission_command_callback(self, msg):
-        nova_missao = msg.data
+        mission_input = msg.data.upper() # Garante case-insensitivity na entrada
         
-        if self.current_mission != nova_missao:
-            self.current_mission = nova_missao
-            self.get_logger().info(f'🔄 Missão atualizada na memória: {self.current_mission}')
+        # Verifica se a missão existe no dicionário e faz a tradução
+        if mission_input in self.mission_map:
+            translated_mission = self.mission_map[mission_input]
+            
+            if self.current_mission_translated != translated_mission:
+                self.current_mission_translated = translated_mission
+                self.get_logger().info(f'🔄 Nova missão validada e armazenada: {self.current_mission_translated}')
+        else:
+            self.get_logger().warn(f'⚠️ Missão desconhecida recebida: {mission_input}')
+
+    def bool_repeater_callback(self, msg, pub_key):
+        # Repassa o booleano APENAS se o publisher específico estiver ativo (Lifecycle)
+        if pub_key in self.pubs and self.pubs[pub_key].is_activated:
+            self.pubs[pub_key].publish(msg)
+            # Descomente a linha abaixo para debug, mas pode poluir muito o terminal
+            # self.get_logger().info(f'🔁 Repetindo booleano: {msg.data} no canal {pub_key}')
 
     def timer_callback(self):
-        # A publicação só ocorre se o nó estiver "Active" e tivermos uma missão
-        if self.current_mission != "NONE" and self.publisher_.is_activated:
-            msg = String()
-            msg.data = self.current_mission
-            self.publisher_.publish(msg)
+        # O Timer apenas lida com a repetição da Missão Atual (GoSignal)
+        pub_mission = self.pubs.get('mission_go')
+        
+        if pub_mission and pub_mission.is_activated and self.current_mission_translated != "NONE":
+            msg = GoSignal()
+            msg.mission = self.current_mission_translated
+            pub_mission.publish(msg)
 
 
 def main(args=None):
@@ -136,7 +193,6 @@ def main(args=None):
     node = RosMsgRepeater()
     
     try:
-        # Apenas fica a rodar (spin). As mudanças de estado virão do SMACC2
         rclpy.spin(node)
     except KeyboardInterrupt:
         pass

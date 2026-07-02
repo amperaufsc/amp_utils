@@ -15,7 +15,16 @@ struct st_AsEmergency : smacc2::SmaccState<st_AsEmergency, Amp_sm>
 
     static void staticConfigure()
     {
-        //
+        std::vector<std::string> nodes_to_shutdown = {
+            "/check_lifecycle_node",
+            "/repeater_node",
+            "/perception_lifecycle_node",
+            "/path_node",
+            "/yolo_node",
+            "/control_node"
+        };
+
+        configure_orthogonal<or_utils, CbChangeLifecycleGroup>(nodes_to_shutdown, 5);
     }
 
     void onEntry()

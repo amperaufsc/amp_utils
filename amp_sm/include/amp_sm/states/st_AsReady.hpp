@@ -21,7 +21,7 @@ struct st_AsReady : smacc2::SmaccState<st_AsReady, Amp_sm>
 
     typedef boost::mpl::list<
     smacc2::Transition<amp_sm::EvCheckListener, amp_sm::st_AsChecking>,
-    smacc2::Transition<amp_sm::EvMissionSelectListener, amp_sm::st_AsDriving>,
+    smacc2::Transition<amp_sm::EvReadyToDrive, amp_sm::st_AsDriving>,
     smacc2::Transition<amp_sm::EvCalibrationListener, amp_sm::st_AsCalibration>,
     smacc2::Transition<amp_sm::EvNodeCrashed, amp_sm::st_AsEmergency>,
     smacc2::Transition<amp_sm::EvStopListener, amp_sm::st_AsEmergency>
@@ -56,6 +56,16 @@ struct st_AsReady : smacc2::SmaccState<st_AsReady, Amp_sm>
 
         //
         //
+
+        std::vector<std::string> nodes_to_activate = {
+            "/repeater_node",
+            "/perception_lifecycle_node",
+            "/path_node",
+            "/yolo_node",
+            "/control_node"
+        };
+
+        configure_orthogonal<or_utils, CbChangeLifecycleGroup>(nodes_to_activate, 3);
         
     }
 
@@ -67,7 +77,7 @@ struct st_AsReady : smacc2::SmaccState<st_AsReady, Amp_sm>
 
     void onExit()
     {
-        RCLCPP_INFO(getLogger(), "Estado StAsReady: Saltando automaticamente para st_AsChecking!");
+        RCLCPP_INFO(getLogger(), "Estado StAsReady: Saltando!");
     }
 };
 } // namespace amp_sm
