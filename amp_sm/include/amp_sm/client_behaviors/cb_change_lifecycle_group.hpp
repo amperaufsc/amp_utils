@@ -43,13 +43,13 @@ private:
         
         for (const auto & target : target_nodes_)
         {
-            // 1. PRIMEIRO PASSO: Consultar o estado atual do nó
+            // 1. PRIMEIRO PASSO: Consultar o estado atual (com até 10 tentativas / ~1.5 a 2s)
             if (isTransitionNecessary(node, target))
             {
-                // 2. SE FOR NECESSÁRIO: Enviar o comando de transição
+                // 2. SE NECESSÁRIO E ENCONTRADO: Enviar o comando de transição
                 auto client_change = node->create_client<lifecycle_msgs::srv::ChangeState>(target + "/change_state");
                 
-                if (client_change->wait_for_service(std::chrono::milliseconds(1500)))
+                if (client_change->wait_for_service(std::chrono::milliseconds(500)))
                 {
                     auto request = std::make_shared<lifecycle_msgs::srv::ChangeState::Request>();
                     request->transition.id = transition_id_;
@@ -61,6 +61,10 @@ private:
                 {
                     RCLCPP_WARN(getLogger(), "[CbGroup] ❌ SERVICO CHANGE_STATE INACESSIVEL: %s", target.c_str());
                 }
+            }
+            else
+            {
+                RCLCPP_WARN(getLogger(), "[CbGroup] ⏭️ Transicao ignorada ou no inalcansavel: %s", target.c_str());
             }
             
             // Pausa entre os nós para evitar pico no DDS
@@ -74,61 +78,79 @@ private:
     {
         auto client_get = node->create_client<lifecycle_msgs::srv::GetState>(target + "/get_state");
         
-        // Verifica se o serviço de consulta de estado está disponível
-        if (!client_get->wait_for_service(std::chrono::milliseconds(1000)))
+        const int max_retries = 40;
+        
+        // --- LAÇO DE TENTATIVAS (RETRY LOOP) ---
+        for (int attempt = 1; attempt <= max_retries; ++attempt)
         {
-            RCLCPP_WARN(getLogger(), "[CbGroup] ⚠️ Nao consegui consultar o estado de %s. Tentarei transacionar mesmo assim.", target.c_str());
-            return true; // Na dúvida, tenta a transição
+            // Espera até 150ms pelo serviço aparecer na rede DDS
+            if (!client_get->wait_for_service(std::chrono::milliseconds(150)))
+            {
+                RCLCPP_DEBUG(getLogger(), "[CbGroup] (%d/%d) Servico get_state nao disponivel para %s. Tentando novamente...", 
+                             attempt, max_retries, target.c_str());
+                
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                continue;
+            }
+
+            auto request = std::make_shared<lifecycle_msgs::srv::GetState::Request>();
+            auto future_result = client_get->async_send_request(request);
+
+            // Aguarda até 150ms pela resposta do nó alvo
+            if (future_result.wait_for(std::chrono::milliseconds(150)) == std::future_status::ready)
+            {
+                auto response = future_result.get();
+                std::string current_state = response->current_state.label;
+                
+                RCLCPP_INFO(getLogger(), "[CbGroup] %s encontrado na tentativa %d/%d. Estado atual: [%s]", 
+                            target.c_str(), attempt, max_retries, current_state.c_str());
+
+                // --- LÓGICA DE DEFESA ---
+                // ID 1: Configure -> Queremos ir para "inactive"
+                if (transition_id_ == lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE) {
+                    if (current_state == "inactive" || current_state == "active") {
+                        RCLCPP_INFO(getLogger(), "[CbGroup] ⏭️ Ignorando CONFIGURE. %s ja esta configurado (%s).", target.c_str(), current_state.c_str());
+                        return false;
+                    }
+                }
+                // ID 2: Activate -> Queremos ir para "active"
+                else if (transition_id_ == lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE) {
+                    if (current_state == "active") {
+                        RCLCPP_INFO(getLogger(), "[CbGroup] ⏭️ Ignorando ACTIVATE. %s ja esta ativo.", target.c_str());
+                        return false;
+                    }
+                }
+                // ID 3: Deactivate -> Queremos ir para "inactive"
+                else if (transition_id_ == lifecycle_msgs::msg::Transition::TRANSITION_DEACTIVATE) {
+                    if (current_state == "inactive" || current_state == "unconfigured") {
+                        RCLCPP_INFO(getLogger(), "[CbGroup] ⏭️ Ignorando DEACTIVATE. %s ja esta inativo/desconfigurado (%s).", target.c_str(), current_state.c_str());
+                        return false;
+                    }
+                }
+                // ID 4: Cleanup -> Queremos ir para "unconfigured"
+                else if (transition_id_ == lifecycle_msgs::msg::Transition::TRANSITION_CLEANUP) {
+                    if (current_state == "unconfigured") {
+                        RCLCPP_INFO(getLogger(), "[CbGroup] ⏭️ Ignorando CLEANUP. %s ja esta desconfigurado.", target.c_str());
+                        return false;
+                    }
+                }
+
+                // Estado consultado com sucesso e precisa transicionar
+                return true; 
+            }
+            else
+            {
+                RCLCPP_DEBUG(getLogger(), "[CbGroup] (%d/%d) Timeout ao aguardar resposta de %s.", 
+                             attempt, max_retries, target.c_str());
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+            }
         }
 
-        auto request = std::make_shared<lifecycle_msgs::srv::GetState::Request>();
-        auto future_result = client_get->async_send_request(request);
-
-        // Aguarda a resposta (síncrono na thread de background, seguro aqui)
-        if (future_result.wait_for(std::chrono::milliseconds(1000)) == std::future_status::ready)
-        {
-            auto response = future_result.get();
-            std::string current_state = response->current_state.label;
-            
-            RCLCPP_INFO(getLogger(), "[CbGroup] %s esta no estado: [%s]", target.c_str(), current_state.c_str());
-
-            // --- LÓGICA DE DEFESA ---
-            // ID 1: Configure -> Queremos ir para "inactive"
-            if (transition_id_ == lifecycle_msgs::msg::Transition::TRANSITION_CONFIGURE) {
-                if (current_state == "inactive" || current_state == "active") {
-                    RCLCPP_INFO(getLogger(), "[CbGroup] ⏭️ Ignorando CONFIGURE. %s ja esta configurado (%s).", target.c_str(), current_state.c_str());
-                    return false;
-                }
-            }
-            // ID 2: Activate -> Queremos ir para "active"
-            else if (transition_id_ == lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE) {
-                if (current_state == "active") {
-                    RCLCPP_INFO(getLogger(), "[CbGroup] ⏭️ Ignorando ACTIVATE. %s ja esta ativo.", target.c_str());
-                    return false;
-                }
-            }
-            // ID 3: Deactivate -> Queremos ir para "inactive"
-            else if (transition_id_ == lifecycle_msgs::msg::Transition::TRANSITION_DEACTIVATE) {
-                if (current_state == "inactive" || current_state == "unconfigured") {
-                    RCLCPP_INFO(getLogger(), "[CbGroup] ⏭️ Ignorando DEACTIVATE. %s ja esta inativo/desconfigurado (%s).", target.c_str(), current_state.c_str());
-                    return false;
-                }
-            }
-            // ID 4: Cleanup -> Queremos ir para "unconfigured"
-            else if (transition_id_ == lifecycle_msgs::msg::Transition::TRANSITION_CLEANUP) {
-                if (current_state == "unconfigured") {
-                    RCLCPP_INFO(getLogger(), "[CbGroup] ⏭️ Ignorando CLEANUP. %s ja esta desconfigurado.", target.c_str());
-                    return false;
-                }
-            }
-        }
-        else
-        {
-             RCLCPP_WARN(getLogger(), "[CbGroup] Timeout ao ler estado de %s. Tentarei transacionar.", target.c_str());
-        }
-
-        // Se o estado for inválido ou não corresponder à verificação de proteção, envia a transição
-        return true; 
+        // Se esgotou as 10 tentativas (~1.5 a 2 segundos) e não teve resposta:
+        RCLCPP_ERROR(getLogger(), "[CbGroup] ❌ Falha ao verificar estado de %s apos 10 tentativas (~2s). Abortando configuracao deste no.", target.c_str());
+        
+        // Retorna false conforme pedido: "se nao encontrar entao nao precisa configurar"
+        return false; 
     }
 };
 } // namespace amp_sm
