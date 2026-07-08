@@ -10,7 +10,7 @@ class CanPublisherNode(Node):
         super().__init__('can_publisher_node')
         self.can_reader = StateCanReader()
 
-        self.go_publisher = self.create_publisher(String, "/can/autonomous_mode", 10)
+        self.go_publisher = self.create_publisher(GoSignal, "/can/autonomous_mode", 10)
 
         self.timer = self.create_timer(0.01, self.can_read)
         self.timer = self.create_timer(0.1, self.can_send)
@@ -20,7 +20,7 @@ class CanPublisherNode(Node):
         self.throttleId = 353
         self.throttle = 0
 
-        self.subscription = self.create_subscription(GoSignal, '/go_signal', self.go_callback, 10)
+        self.subscription = self.create_subscription(GoSignal, 'can/go_signal', self.go_callback, 10)
 
 
         self.uint8_publishers = {
@@ -98,12 +98,13 @@ class CanPublisherNode(Node):
             mode = can_data["AutonomousMode"]
             self.get_logger().debug(f'{mode}')  
             if mode is not None:
-                go_message = String() 
-                go_message.data = str(mode)
+                go_message = GoSignal() 
+                go_message.mission = str(mode)
+                go_message.track = "track"
                 self.go_publisher.publish(go_message)
 
         except Exception as e:
-            self.get_logger().info(f'{e}')
+            self.get_logger().info(f'erro: {e}')
 
     def can_send(self):
             if self.goSignal:
