@@ -98,14 +98,17 @@ BO_ 393 RESControl: 2 RES
  SG_ ASStatus : 0|8@1+ (1,0) [0|0] ""  JETSON
  SG_ GOSignal : 8|8@1+ (1,0) [0|0] ""  JETSON
 
-BO_ 865 Jetson: 1 JETSON
- SG_ AutonomousModeJetson : 0|8@1+ (1,0) [0|0] "" Vector__XXX
+BO_ 865 JetsonState: 1 JETSON
+ SG_ GoECU : 0|1@1+ (1,0) [0|0] "" Vector__XXX
 
 BO_ 137 RESEmergency: 1 RES
  SG_ ASEmergency : 0|1@1+ (1,0) [0|0] ""  JETSON
 
 BO_ 3221225472 VECTOR__INDEPENDENT_SIG_MSG: 0 Vector__XXX
  SG_ a : 0|1@1+ (1,0) [0|0] ""  DATALOGGER,JETSON
+
+BO_ 353 JetsonControl: 2 JETSON
+ SG_ Throttle : 0|16@1+ (1,0) [0|0] "" Vector__XXX
 
 
 
@@ -131,8 +134,10 @@ CM_ BO_ 1187 "60 Hz
 CM_ BO_ 1188 "60 Hz
 ";
 CM_ BO_ 393 "100 Hz";
-CM_ BO_ 865 "10 Hz";
+CM_ BO_ 865 "100 Hz";
 CM_ BO_ 137 "100 Hz
+";
+CM_ BO_ 353 "100 Hz
 ";
 BA_DEF_  "BusType" STRING ;
 BA_DEF_DEF_  "BusType" "CAN";
