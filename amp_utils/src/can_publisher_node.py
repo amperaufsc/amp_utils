@@ -12,7 +12,8 @@ class CanPublisherNode(Node):
 
         self.go_publisher = self.create_publisher(String, "/can/autonomous_mode", 10)
 
-        self.timer = self.create_timer(0.01, self.can_publish)
+        self.timer = self.create_timer(0.01, self.can_read)
+        self.timer = self.create_timer(0.1, self.can_send)
 
         self.goId = 865
         self.goSignal = 0
@@ -77,7 +78,7 @@ class CanPublisherNode(Node):
             "/can/inverter_current": self.create_publisher(Float32, "/can/inverter_current", 10),
             "/can/inverter_voltage": self.create_publisher(Float32, "/can/inverter_voltage", 10),
         }
-    def can_publish(self):
+    def can_read(self):
         try:
             message = self.can_reader.receive_message()
         
@@ -101,15 +102,16 @@ class CanPublisherNode(Node):
                 go_message.data = str(mode)
                 self.go_publisher.publish(go_message)
 
-            if self.goSignal:
-                self.goSignal = 0
-                can_reader.send_message(self.goId, {"GoECU": 1})
-                can_reader.send_message(self.throttleId, {"Throttle": self.throttle})
-            else:
-                can_reader.send_message(self.goId, {"GoECU": 0})
-
         except Exception as e:
             self.get_logger().info(f'{e}')
+
+    def can_send(self):
+            if self.goSignal:
+                self.goSignal = 0
+                self.can_reader.send_message(self.goId, {"GoECU": 1})
+                self.can_reader.send_message(self.throttleId, {"Throttle": self.throttle})
+            else:
+                self.can_reader.send_message(self.goId, {"GoECU": 0})
 
     def uint8_publish(self, can_data):
         uint8_signals = {
