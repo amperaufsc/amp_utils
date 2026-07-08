@@ -3,6 +3,8 @@ from launch_ros.actions import Node
 from launch.actions import DeclareLaunchArgument as LaunchArg
 from launch.substitutions import LaunchConfiguration
 
+
+
 def generate_launch_description():
     return LaunchDescription([
         # Namespace global do nó
@@ -55,6 +57,8 @@ def generate_launch_description():
         LaunchArg('inverter_current_topic', default_value=['/can/inverter_current'], description='Topic for inverter current'),
         LaunchArg('inverter_voltage_topic', default_value=['/can/inverter_voltage'], description='Topic for inverter voltage'),
 
+        LaunchArg('throttle', default_value='0'),
+
         # ==========================================
         # 2. CONFIGURAÇÃO DO NÓ E REMAPPINGS
         # ==========================================
@@ -64,6 +68,7 @@ def generate_launch_description():
             name='can_publisher_node',
             namespace=LaunchConfiguration('namespace'),
             output='screen',
+            parameters=[{'throttle': LaunchConfiguration('throttle')}],
             remappings=[
                 # STRING
                 ('/can/autonomous_mode', LaunchConfiguration('autonomous_mode_topic')),

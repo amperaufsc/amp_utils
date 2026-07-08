@@ -14,13 +14,14 @@ class CanPublisherNode(Node):
 
         self.timer = self.create_timer(0.01, self.can_read)
         self.timer = self.create_timer(0.1, self.can_send)
+        self.declare_parameter('throttle', 0)
+        self.throttle = self.get_parameter('throttle').get_parameter_value().integer_value
 
         self.goId = 865
         self.goSignal = 0
         self.throttleId = 353
-        self.throttle = 0
 
-        self.subscription = self.create_subscription(GoSignal, 'can/go_signal', self.go_callback, 10)
+        self.subscription = self.create_subscription(GoSignal, 'can/autonomous_mode', self.go_callback, 10)
 
 
         self.uint8_publishers = {
