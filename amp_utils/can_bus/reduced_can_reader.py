@@ -11,7 +11,7 @@ class StateCanReader():
     def __init__(self) -> None:
         DBC_FILE = "src/amp_utils/amp_utils/config/amp226-teste.dbc"
         BUSTYPE = "socketcan"
-        CHANNEL = "can1"
+        CHANNEL = "can0"
         self.db = cantools.database.load_file(DBC_FILE)
 
         filters = [
