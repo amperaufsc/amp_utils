@@ -14,6 +14,14 @@ class CanPublisherNode(Node):
 
         self.timer = self.create_timer(0.01, self.can_publish)
 
+        self.goId = 865
+        self.goSignal = 0
+        self.throttleId = 353
+        self.throttle = 0
+
+        self.subscription = self.create_subscription(GoSignal, '/go_signal', self.go_callback, 10)
+
+
         self.uint8_publishers = {
             #Painel
             "/can/ready_to_drive": self.create_publisher(UInt8, "/can/ready_to_drive", 10),
@@ -92,6 +100,14 @@ class CanPublisherNode(Node):
                 go_message = String() 
                 go_message.data = str(mode)
                 self.go_publisher.publish(go_message)
+
+            if self.goSignal:
+                self.goSignal = 0
+                can_reader.send_message(self.goId, {"GoECU": 1})
+                can_reader.send_message(self.throttleId, {"Throttle": self.throttle})
+            else:
+                can_reader.send_message(self.goId, {"GoECU": 0})
+
         except Exception as e:
             self.get_logger().info(f'{e}')
 
@@ -184,6 +200,9 @@ class CanPublisherNode(Node):
                     self.get_logger().info(f'Mensagem {msg.data} publicada para {topic}')
             except  Exception as e:
                 self.get_logger().debug(f'Erro {e} ao publicar {signal}')
+
+    def go_callback(self, message: GoSignal):
+        self.goSignal = 1
 
 
 def main(args=None):

@@ -11,7 +11,7 @@ class StateCanReader():
     def __init__(self) -> None:
         DBC_FILE = "src/amp_utils/amp_utils/config/amp226-teste.dbc"
         BUSTYPE = "socketcan"
-        CHANNEL = "can0"
+        CHANNEL = "can1"
         self.db = cantools.database.load_file(DBC_FILE)
 
         filters = [
@@ -59,15 +59,14 @@ class StateCanReader():
         
         return can_message
 
-    def send_references_throttle(self, values):
-         if 'Velocidade' in values:
-            try:
-                speed_ref_data = self.db.encode_message(274, {'Ref_Velocidade': values['Velocidade']})
-                self.can_listener.bus.send(
-                    can.Message(arbitration_id=274, data=speed_ref_data, is_extended_id=False)
-                )
-            except Exception as e:
-                self.logger.error(f"Erro ao enviar Ref_Velocidade: {e}")
+    def send_message(self, id, signals, extended=False):
+        try:
+            data = self.db.encode_message(id, signals)
+            self.can_listener.bus.send(
+                can.Message(arbitration_id=id, data=data, is_extended_id=extended)
+            )
+        except Exception as e:
+            self.logger.error(f"Erro ao enviar: {e}")
 
     def receive_message(self):
         try:
