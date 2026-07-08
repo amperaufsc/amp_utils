@@ -59,15 +59,13 @@ class StateCanReader():
         
         return can_message
 
-    def send_references_throttle(self, values):
-         if 'Velocidade' in values:
-            try:
-                speed_ref_data = self.db.encode_message(274, {'Ref_Velocidade': values['Velocidade']})
-                self.can_listener.bus.send(
-                    can.Message(arbitration_id=274, data=speed_ref_data, is_extended_id=False)
-                )
-            except Exception as e:
-                self.logger.error(f"Erro ao enviar Ref_Velocidade: {e}")
+    def send_message(self, id, value, extended=False):
+        try:
+            self.can_listener.bus.send(
+                can.Message(arbitration_id=id, data=value, is_extended_id=extended)
+            )
+        except Exception as e:
+            self.logger.error(f"Erro ao enviar Ref_Velocidade: {e}")
 
     def receive_message(self):
         try:
