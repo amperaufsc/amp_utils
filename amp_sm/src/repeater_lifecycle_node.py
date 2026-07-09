@@ -12,11 +12,10 @@ class RosMsgRepeater(Node):
         # --- MÁQUINA DE ESTADOS ---
         # WAIT_MISSION: Ignora RES e aguarda missão
         # WAIT_RES: Missão recebida, 60s para receber GO e READY
-        # PUBLISHING: Condições atendidas, publicando missão a 10Hz
+        # PUBLISHING: Condições atendidas, missão publicada, aguardando reset se cair
         self.sm_state = "WAIT_MISSION"
         
         self.current_mission_translated = "NONE"
-        self.timer_10hz = None
         self.timeout_timer = None # Timer para a janela de 1 minuto
         
         # Variáveis de memória do RES
@@ -63,10 +62,6 @@ class RosMsgRepeater(Node):
         try:
             self.get_logger().info('Ativando repeater node...')
             super().on_activate(state)
-            
-            # Loop de publicação a 10 Hz
-            self.timer_10hz = self.create_timer(0.1, self.timer_10hz_callback)
-
             return TransitionCallbackReturn.SUCCESS
             
         except Exception as e:
@@ -78,11 +73,6 @@ class RosMsgRepeater(Node):
             self.get_logger().info('Desativando repeater node...')
             super().on_deactivate(state)
             
-            if self.timer_10hz is not None:
-                self.timer_10hz.cancel()
-                self.destroy_timer(self.timer_10hz)
-                self.timer_10hz = None
-                
             if self.timeout_timer is not None:
                 self.timeout_timer.cancel()
                 self.destroy_timer(self.timeout_timer)
@@ -122,10 +112,9 @@ class RosMsgRepeater(Node):
         try:
             self.get_logger().info('Shutdown repeater node...')
             
-            for timer in [self.timer_10hz, self.timeout_timer]:
-                if timer is not None:
-                    timer.cancel()
-                    self.destroy_timer(timer)
+            if self.timeout_timer is not None:
+                self.timeout_timer.cancel()
+                self.destroy_timer(self.timeout_timer)
                 
             for sub in self.subs.values():
                 self.destroy_subscription(sub)
@@ -182,7 +171,6 @@ class RosMsgRepeater(Node):
 
     def bool_repeater_callback(self, msg, pub_key):
         # A mensagem de emergência passa direto, independentemente do estado.
-        # Mas GO e READY dependem do estado da máquina.
         if pub_key in ['go', 'ready']:
             
             # Se não recebemos missão ainda, ignoramos os botões completamente
@@ -195,7 +183,8 @@ class RosMsgRepeater(Node):
             elif pub_key == 'ready':
                 self.as_ready_state = msg.data
 
-            # Se estávamos esperando e ambos ficaram verdadeiros, passamos para PUBLISHING
+            # --- LÓGICA DE DISPARO ÚNICO (ONE-SHOT) ---
+            # Se estávamos esperando e ambos ficaram verdadeiros, mudamos o estado e disparamos.
             if self.sm_state == "WAIT_RES" and self.res_go_state and self.as_ready_state:
                 self.sm_state = "PUBLISHING"
                 
@@ -204,27 +193,24 @@ class RosMsgRepeater(Node):
                     self.timeout_timer.cancel()
                     self.destroy_timer(self.timeout_timer)
                     self.timeout_timer = None
-                    
-                self.get_logger().info('✅ AS_READY e GO recebidos a tempo! Publicando missão a 10Hz.')
+                
+                # Dispara a mensagem da Missão exatamente UMA VEZ
+                pub_mission = self.pubs.get('mission_go')
+                if pub_mission and pub_mission.is_activated:
+                    mission_msg = GoSignal()
+                    mission_msg.mission = self.current_mission_translated
+                    pub_mission.publish(mission_msg)
+                    self.get_logger().info('✅ AS_READY e GO recebidos a tempo! Missão publicada UMA ÚNICA VEZ.')
 
             # Regra de Segurança Extra: Se cair qualquer um dos sinais DURANTE a execução, aborta tudo.
             elif self.sm_state == "PUBLISHING" and (not self.res_go_state or not self.as_ready_state):
-                self.get_logger().warn('🚨 Sinal de GO ou READY caiu! Abortando a publicação e voltando ao início.')
+                self.get_logger().warn('🚨 Sinal de GO ou READY caiu! Voltando ao estado inicial.')
                 self.sm_state = "WAIT_MISSION"
                 self.current_mission_translated = "NONE"
 
         # Repassa o booleano APENAS se o publisher específico estiver ativo e o estado permitiu chegar aqui
         if pub_key in self.pubs and self.pubs[pub_key].is_activated:
             self.pubs[pub_key].publish(msg)
-
-    def timer_10hz_callback(self):
-        pub_mission = self.pubs.get('mission_go')
-        
-        # O Timer apenas publica se estivermos no estado final (PUBLISHING)
-        if pub_mission and pub_mission.is_activated and self.sm_state == "PUBLISHING":
-            msg = GoSignal()
-            msg.mission = self.current_mission_translated
-            pub_mission.publish(msg)
 
 def main(args=None):
     rclpy.init(args=args)
