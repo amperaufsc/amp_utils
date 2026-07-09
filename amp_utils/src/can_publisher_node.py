@@ -17,11 +17,11 @@ class CanPublisherNode(Node):
         self.declare_parameter('throttle', 0)
         self.throttle = self.get_parameter('throttle').get_parameter_value().integer_value
 
-        self.goId = 865
+        self.goId = 273
         self.goSignal = 0
-        self.throttleId = 353
+        self.throttleId = 274
 
-        self.subscription = self.create_subscription(GoSignal, 'can/autonomous_mode', self.go_callback, 10)
+        self.subscription = self.create_subscription(GoSignal, '/as_amp/mission_selected/go', self.go_callback, 10)
 
 
         self.uint8_publishers = {
@@ -90,7 +90,7 @@ class CanPublisherNode(Node):
             can_data = self.can_reader.can_reader(message)
             if can_data is None:
                 return
-            self.get_logger().info(f'{can_data}')
+            #self.get_logger().info(f'{can_data}')
 
             self.uint8_publish(can_data)
             self.uint16_publish(can_data)
@@ -105,15 +105,12 @@ class CanPublisherNode(Node):
                 self.go_publisher.publish(go_message)
 
         except Exception as e:
-            self.get_logger().info(f'erro: {e}')
+            self.get_logger().debug(f'erro: {e}')
 
     def can_send(self):
             if self.goSignal:
-                self.goSignal = 0
-                self.can_reader.send_message(self.goId, {"GoECU": 1})
+                self.get_logger().info("enviando Throttle ECU")
                 self.can_reader.send_message(self.throttleId, {"Throttle": self.throttle})
-            else:
-                self.can_reader.send_message(self.goId, {"GoECU": 0})
 
     def uint8_publish(self, can_data):
         uint8_signals = {
@@ -149,7 +146,7 @@ class CanPublisherNode(Node):
                     msg = UInt8()
                     msg.data = int(can_data[signal])
                     self.uint8_publishers[topic].publish(msg)
-                    self.get_logger().info(f'Mensagem {msg.data} publicada para {topic}')
+                    #self.get_logger().info(f'Mensagem {msg.data} publicada para {topic}')
             except  Exception as e:
                 self.get_logger().debug(f'Erro {e} ao publicar {signal}')
 
@@ -170,7 +167,7 @@ class CanPublisherNode(Node):
                     msg = UInt16()
                     msg.data = int(can_data[signal])
                     self.uint16_publishers[topic].publish(msg)
-                    self.get_logger().info(f'Mensagem {msg.data} publicada para {topic}')
+                    #self.get_logger().info(f'Mensagem {msg.data} publicada para {topic}')
             except  Exception as e:
                 self.get_logger().debug(f'Erro {e} ao publicar {signal}')
 
@@ -201,12 +198,14 @@ class CanPublisherNode(Node):
                     msg = Float32()
                     msg.data = float(can_data[signal])
                     self.float_publishers[topic].publish(msg)
-                    self.get_logger().info(f'Mensagem {msg.data} publicada para {topic}')
+                    #self.get_logger().info(f'Mensagem {msg.data} publicada para {topic}')
             except  Exception as e:
                 self.get_logger().debug(f'Erro {e} ao publicar {signal}')
 
     def go_callback(self, message: GoSignal):
-        self.goSignal = 1
+        self.goSignal = (self.goSignal + 1)%2
+        self.get_logger().info("Enviando GO")
+        self.can_reader.send_message(self.goId, {"GoECU": self.goSignal})
 
 
 def main(args=None):
