@@ -6,6 +6,7 @@
 #include <smacc2/smacc_client.hpp>
 #include <std_msgs/msg/bool.hpp>
 #include <rclcpp/rclcpp.hpp>
+#include <fs_msgs/msg/go_signal.hpp>
 
 
 namespace amp_sm
@@ -65,102 +66,41 @@ namespace amp_sm
     {
     public:
         ClReadyToDrive()
-        : go_out_received_(false), ready_out_received_(false), go_received_(false), event_triggered_(false)
+        : event_triggered_(false)
         {
         }
 
         void onInitialize() override
         {
-            // Subscreve ao tópico /as_amp/mission_select
-            sub_go_out_ = getNode()->create_subscription<std_msgs::msg::String>(
-                "/as_amp/mission_select", 
+            // Subscreve apenas ao tópico unificado que vem do nó Repeater
+            sub_go_signal_ = getNode()->create_subscription<fs_msgs::msg::GoSignal>(
+                "/as_amp/mission_selected/go", 
                 10, 
-                std::bind(&ClReadyToDrive::onGoOutCallback, this, std::placeholders::_1)
+                std::bind(&ClReadyToDrive::onGoSignalCallback, this, std::placeholders::_1)
             );
 
-            // Subscreve ao tópico /as_amp/res/as_ready
-            sub_ready_out_ = getNode()->create_subscription<std_msgs::msg::Bool>(
-                "/as_amp/res/as_ready", 
-                10, 
-                std::bind(&ClReadyToDrive::onReadyOutCallback, this, std::placeholders::_1)
-            );
-
-            // Subscreve ao tópico /go
-            sub_go_ = getNode()->create_subscription<std_msgs::msg::Bool>(
-                "/as_amp/res/go", 
-                10, 
-                std::bind(&ClReadyToDrive::onGoCallback, this, std::placeholders::_1)
-            );
-
-            RCLCPP_INFO(getLogger(), "[ClReadyToDrive] Cliente inicializado. A aguardar /as_amp/go_out (Missão), /as_amp/res/as_ready e /as_amp/res/go");
+            RCLCPP_INFO(getLogger(), "[ClReadyToDrive] Inicializado. Aguardando GoSignal em /as_amp/mission_selected/go");
         }
 
     private:
-        // Pointers para os Subscribers (Note a alteração no tipo do sub_go_out_)
-        rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub_go_out_;
-        rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr sub_ready_out_;
-        rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr sub_go_;
+        // O Subscriber agora usa o tipo GoSignal
+        rclcpp::Subscription<fs_msgs::msg::GoSignal>::SharedPtr sub_go_signal_;
 
-        // Variáveis de estado interno
-        bool go_out_received_;
-        bool ready_out_received_;
-        bool go_received_;
-        
-        // Flag de segurança para não disparar o evento múltiplas vezes sem querer
+        // Flag de segurança para não disparar o evento múltiplas vezes
         bool event_triggered_;
 
-        // Callback para /as_amp/go_out (AGORA AVALIA A STRING)
-        void onGoOutCallback(const std_msgs::msg::String::SharedPtr msg)
+        // Callback simplificado: Se a mensagem chegou, é porque o nó Repeater já validou tudo!
+        void onGoSignalCallback(const fs_msgs::msg::GoSignal::SharedPtr msg)
         {
-            std::string missao = msg->data;
-
-            // Verifica se a string recebida é uma das missões válidas
-            if (missao == "TRACKDRIVE" || missao == "AUTOCROSS" || 
-                missao == "SKIDPAD" || missao == "ACCELERATION")
+            if (!event_triggered_)
             {
-                go_out_received_ = true;
-            }
-            else
-            {
-                go_out_received_ = false;
-            }
-
-            checkConditionsAndTrigger();
-        }
-
-        // Callback para /as_amp/res/as_ready
-        void onReadyOutCallback(const std_msgs::msg::Bool::SharedPtr msg)
-        {
-            ready_out_received_ = msg->data;
-            checkConditionsAndTrigger();
-        }
-
-        // Callback para /as_amp/res/go
-        void onGoCallback(const std_msgs::msg::Bool::SharedPtr msg)
-        {
-            go_received_ = msg->data;
-            checkConditionsAndTrigger();
-        }
-
-        // Função que avalia se todas as condições estão cumpridas
-        void checkConditionsAndTrigger()
-        {
-            // Se todos são true e ainda não disparamos o evento
-            if (go_out_received_ && ready_out_received_ && go_received_ && !event_triggered_)
-            {
-                RCLCPP_INFO(getLogger(), "✅ [ClReadyToDrive] CONDIÇÕES ATINGIDAS: Missão válida, READY_OUT e GO confirmados!");
-
-                // Lança o evento para a Máquina de Estados
+                RCLCPP_INFO(getLogger(), "✅ [ClReadyToDrive] GoSignal recebido para a missao: [%s]!", msg->mission.c_str());
+                
+                // Lança o evento para a Máquina de Estados transicionar
                 this->postEvent<EvReadyToDrive>();
                 
-                // Tranca o gatilho para não inundar a state machine se os tópicos continuarem a publicar 'true'
+                // Tranca o gatilho
                 event_triggered_ = true; 
-            }
-            else if ((!go_out_received_ || !ready_out_received_ || !go_received_) && event_triggered_)
-            {
-                // Opcional: Se algum dos sinais cair para falso (0) ou a missão mudar para algo inválido, 
-                // "rearmamos" a flag permitindo que o evento seja disparado novamente no futuro se necessário.
-                event_triggered_ = false;
             }
         }
     };
