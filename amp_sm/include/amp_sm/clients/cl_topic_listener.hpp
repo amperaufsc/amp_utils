@@ -7,6 +7,7 @@
 #include <std_msgs/msg/bool.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <fs_msgs/msg/go_signal.hpp>
+#include "std_msgs/msg/u_int8.hpp"
 
 
 namespace amp_sm
@@ -105,35 +106,39 @@ namespace amp_sm
         }
     };
 
-    class ClStopListener : public smacc2::client_bases::SmaccSubscriberClient<std_msgs::msg::String>
+    class ClStopListener : public smacc2::client_bases::SmaccSubscriberClient<std_msgs::msg::UInt8>
     {
     public:
         ClStopListener()
-            : smacc2::client_bases::SmaccSubscriberClient<std_msgs::msg::String>("/as_amp/stop")
+            : smacc2::client_bases::SmaccSubscriberClient<std_msgs::msg::UInt8>("/as_amp/res/as_emergency")
         {
         }
 
         void onInitialize() override
         {
-            smacc2::client_bases::SmaccSubscriberClient<std_msgs::msg::String>::onInitialize();
+            // 1. Atualiza a chamada do método da classe base para usar UInt8
+            smacc2::client_bases::SmaccSubscriberClient<std_msgs::msg::UInt8>::onInitialize();
 
-            // Atualizado para o novo nome da classe
+            // Faz o bind do callback
             this->onMessageReceived(&ClStopListener::messageCallback, this);
         }
 
     private:
-        void messageCallback(const std_msgs::msg::String &msg)
+        // 2. Altera o tipo do parâmetro que a função recebe
+        void messageCallback(const std_msgs::msg::UInt8 &msg)
         {
-            if (msg.data == "STOP")
+            // 3. Verifica se o valor numérico é 1
+            if (msg.data == 1)
             {
                 RCLCPP_INFO(
                     getLogger(),
-                    "[ClTopicListener] Comando Stop recebido! Disparando evento...");
+                    "[ClStopListener] Comando Stop recebido (UInt8 = 1)! Disparando evento...");
 
                 this->postEvent<EvStopListener>();
             }
         }
     };
+
     class ClFinishedListener : public smacc2::client_bases::SmaccSubscriberClient<std_msgs::msg::String>
     {
     public:

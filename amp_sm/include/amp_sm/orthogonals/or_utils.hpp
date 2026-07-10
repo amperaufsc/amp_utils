@@ -53,6 +53,7 @@ public:
         this->createClient<amp_sm::ClMissionSelectListener>(); // cliente que dispara um Evento quando recebe um "Go".
         this->createClient<amp_sm::ClReadyToDrive>(); // cliente que dispara um Evento quando recebe alguma missao valida & mensagem go do res & mensagem ready do res.
         this->createClient<amp_sm::ClFinishedListener>(); // cliente que dispara um Evento quando recebe a missao foi concluida (mensagem publicada pelo Path Planning).
+        this->createClient<amp_sm::ClStopListener>();
     }
 };
 } // namespace amp_sm
