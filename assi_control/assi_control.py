@@ -11,10 +11,10 @@ class Control():
 
 
     def update_leds(self, command):
-        yellow, green, blue, = command
-        GPIO.output(self.yellow, yellow)
-        GPIO.output(self.green, green)
-        GPIO.output(self.blue, blue)
+        yellow, green, blue = command
+        GPIO.output(self.yellowPin, yellow)
+        GPIO.output(self.greenPin, green)
+        GPIO.output(self.bluePin, blue)
 
     def shutdown(self):
         GPIO.cleanup()
