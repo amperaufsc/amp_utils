@@ -24,7 +24,7 @@ struct st_AsEmergency : smacc2::SmaccState<st_AsEmergency, Amp_sm>
             "/control_node"
         };
 
-        configure_orthogonal<or_utils, CbChangeLifecycleGroup>(nodes_to_shutdown, 5);
+        configure_orthogonal<or_utils, CbChangeLifecycleGroup>(nodes_to_shutdown, 7);   
     }
 
     void onEntry()
