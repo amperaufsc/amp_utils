@@ -30,7 +30,7 @@ class CanPublisherNode(Node):
             "/can/page_id": self.create_publisher(UInt8, "/can/page_id", 10),
 
             #RES
-            "/can/AS_status": self.create_publisher(UInt8, "/can/as_status", 10),
+            "/can/as_status": self.create_publisher(UInt8, "/can/as_status", 10),
             "/can/go_signal": self.create_publisher(UInt8, "/can/go_signal", 10),
             "/can/emergency": self.create_publisher(UInt8, "/can/emergency", 10),
 
