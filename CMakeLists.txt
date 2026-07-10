@@ -50,6 +50,12 @@ install(
         DESTINATION lib/${PROJECT_NAME}
 )
 
+install(
+        PROGRAMS 
+        ros2/autonomous_system_status_indicator_node.py
+        DESTINATION lib/${PROJECT_NAME}
+)
+
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
 ament_package()
