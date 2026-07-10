@@ -15,7 +15,7 @@ find_package(lifecycle_msgs REQUIRED)
 find_package(ros_timer_client REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)  
-
+find_package(fs_msgs REQUIRED)
 add_executable(amp_sm_node src/main.cpp)
 
 target_include_directories(amp_sm_node PUBLIC
@@ -31,6 +31,7 @@ ament_target_dependencies(amp_sm_node
   ros_timer_client
   std_msgs
   sensor_msgs
+  fs_msgs
 )
 
 install(

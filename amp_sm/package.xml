@@ -17,6 +17,8 @@
   <depend>ros_timer_client</depend>
   <depend>std_msgs</depend>
   <depend>sensor_msgs</depend>
+  <depend>fs_msgs</depend>
+
   <exec_depend>rclpy</exec_depend>
 
 
