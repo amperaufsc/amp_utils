@@ -116,7 +116,6 @@ class CanPublisherNode(Node):
         uint8_signals = {
             #painel
             "ReadyToDrive": "/can/ready_to_drive",
-            "AutonomousMode": "/can/autonomous_mode",
             "PageID":"/can/page_id",
 
             #RES
