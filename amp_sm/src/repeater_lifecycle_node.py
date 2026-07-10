@@ -2,7 +2,8 @@
 
 import rclpy
 from rclpy.lifecycle import Node, State, TransitionCallbackReturn
-from std_msgs.msg import String, Bool
+# Importando o UInt8
+from std_msgs.msg import String, UInt8 
 from fs_msgs.msg import GoSignal
 
 class RosMsgRepeater(Node):
@@ -12,13 +13,14 @@ class RosMsgRepeater(Node):
         # --- MÁQUINA DE ESTADOS ---
         # WAIT_MISSION: Ignora RES e aguarda missão
         # WAIT_RES: Missão recebida, 60s para receber GO e READY
-        # PUBLISHING: Condições atendidas, missão publicada, aguardando reset se cair
+        # WAIT_FINISH: Primeiro GoSignal enviado, aguardando /as_amp/go/finish
+        # COMPLETED: Segundo GoSignal enviado, aguarda queda de sinal ou nova missão
         self.sm_state = "WAIT_MISSION"
         
         self.current_mission_translated = "NONE"
         self.timeout_timer = None # Timer para a janela de 1 minuto
         
-        # Variáveis de memória do RES
+        # Variáveis de memória do RES (Mantidas como booleanos para a lógica interna)
         self.res_go_state = False
         self.as_ready_state = False
         
@@ -43,14 +45,19 @@ class RosMsgRepeater(Node):
             self.get_logger().info('Configurando repeater node...')
             
             self.pubs['mission_go'] = self.create_lifecycle_publisher(GoSignal, '/as_amp/mission_selected/go', 10)
-            self.pubs['go'] = self.create_lifecycle_publisher(Bool, '/as_amp/res/go_out', 10)
-            self.pubs['ready'] = self.create_lifecycle_publisher(Bool, '/as_amp/res/as_ready_out', 10)
-            self.pubs['emergency'] = self.create_lifecycle_publisher(Bool, '/as_amp/res/as_emergency_out', 10)
+            
+            # Publishers alterados para UInt8 para poderem repassar a mensagem recebida
+            self.pubs['go'] = self.create_lifecycle_publisher(UInt8, '/as_amp/res/go_out', 10)
+            self.pubs['ready'] = self.create_lifecycle_publisher(UInt8, '/as_amp/res/as_ready_out', 10)
+            self.pubs['emergency'] = self.create_lifecycle_publisher(UInt8, '/as_amp/res/as_emergency_out', 10)
 
             self.subs['mission_select'] = self.create_subscription(String, '/as_amp/mission_select', self.mission_command_callback, 10)
-            self.subs['go'] = self.create_subscription(Bool, '/as_amp/res/go', lambda msg: self.bool_repeater_callback(msg, 'go'), 10)
-            self.subs['ready'] = self.create_subscription(Bool, '/as_amp/res/as_ready', lambda msg: self.bool_repeater_callback(msg, 'ready'), 10)
-            self.subs['emergency'] = self.create_subscription(Bool, '/as_amp/res/as_emergency', lambda msg: self.bool_repeater_callback(msg, 'emergency'), 10)
+            
+            # Subscribers alterados para UInt8
+            self.subs['go'] = self.create_subscription(UInt8, '/as_amp/res/go', lambda msg: self.uint8_repeater_callback(msg, 'go'), 10)
+            self.subs['ready'] = self.create_subscription(UInt8, '/as_amp/res/as_ready', lambda msg: self.uint8_repeater_callback(msg, 'ready'), 10)
+            self.subs['emergency'] = self.create_subscription(UInt8, '/as_amp/res/as_emergency', lambda msg: self.uint8_repeater_callback(msg, 'emergency'), 10)
+            self.subs['go_finish'] = self.create_subscription(UInt8, '/as_amp/go/finish', self.go_finish_callback, 10)
 
             return TransitionCallbackReturn.SUCCESS
             
@@ -140,7 +147,6 @@ class RosMsgRepeater(Node):
         self.res_go_state = False
         self.as_ready_state = False
         
-        # Destrói o timer de timeout pois ele já cumpriu seu papel
         if self.timeout_timer is not None:
             self.timeout_timer.cancel()
             self.destroy_timer(self.timeout_timer)
@@ -159,7 +165,6 @@ class RosMsgRepeater(Node):
             
             self.get_logger().info(f'🔄 Missão [{self.current_mission_translated}] selecionada! Janela de 60s iniciada para receber GO e READY.')
             
-            # Gerencia a janela de tempo de 60 segundos
             if self.timeout_timer is not None:
                 self.timeout_timer.cancel()
                 self.destroy_timer(self.timeout_timer)
@@ -169,46 +174,55 @@ class RosMsgRepeater(Node):
         else:
             self.get_logger().warn(f'⚠️ Missão desconhecida: {mission_input}')
 
-    def bool_repeater_callback(self, msg, pub_key):
-        # A mensagem de emergência passa direto, independentemente do estado.
+    def go_finish_callback(self, msg):
+        """Recebe o sinal de término (UInt8) e dispara o segundo GoSignal."""
+        # Avalia como verdadeiro se msg.data for 1 (ou > 0)
+        if msg.data == 1 and self.sm_state == "WAIT_FINISH":
+            pub_mission = self.pubs.get('mission_go')
+            if pub_mission and pub_mission.is_activated:
+                mission_msg = GoSignal()
+                mission_msg.mission = self.current_mission_translated
+                pub_mission.publish(mission_msg)
+                self.get_logger().info('🏁 Sinal FINISH recebido (UInt8=1)! Segundo GoSignal publicado.')
+                
+                # Avança para COMPLETED para não repetir a publicação se receber outro 1
+                self.sm_state = "COMPLETED"
+
+    def uint8_repeater_callback(self, msg, pub_key):
         if pub_key in ['go', 'ready']:
             
-            # Se não recebemos missão ainda, ignoramos os botões completamente
             if self.sm_state == "WAIT_MISSION":
                 return 
 
-            # Atualiza a memória de estado
+            # Traduz o UInt8 (0 ou 1) para o booleano da memória interna da State Machine
             if pub_key == 'go':
-                self.res_go_state = msg.data
+                self.res_go_state = (msg.data == 1)
             elif pub_key == 'ready':
-                self.as_ready_state = msg.data
+                self.as_ready_state = (msg.data == 1)
 
-            # --- LÓGICA DE DISPARO ÚNICO (ONE-SHOT) ---
-            # Se estávamos esperando e ambos ficaram verdadeiros, mudamos o estado e disparamos.
+            # 1º DISPARO: Quando recebe GO e READY dentro do tempo
             if self.sm_state == "WAIT_RES" and self.res_go_state and self.as_ready_state:
-                self.sm_state = "PUBLISHING"
+                self.sm_state = "WAIT_FINISH" 
                 
-                # Sucesso! Cancela a janela de tempo de 1 minuto
                 if self.timeout_timer is not None:
                     self.timeout_timer.cancel()
                     self.destroy_timer(self.timeout_timer)
                     self.timeout_timer = None
                 
-                # Dispara a mensagem da Missão exatamente UMA VEZ
                 pub_mission = self.pubs.get('mission_go')
                 if pub_mission and pub_mission.is_activated:
                     mission_msg = GoSignal()
                     mission_msg.mission = self.current_mission_translated
                     pub_mission.publish(mission_msg)
-                    self.get_logger().info('✅ AS_READY e GO recebidos a tempo! Missão publicada UMA ÚNICA VEZ.')
+                    self.get_logger().info('✅ AS_READY e GO recebidos! PRIMEIRO GoSignal publicado. Aguardando finish...')
 
-            # Regra de Segurança Extra: Se cair qualquer um dos sinais DURANTE a execução, aborta tudo.
-            elif self.sm_state == "PUBLISHING" and (not self.res_go_state or not self.as_ready_state):
-                self.get_logger().warn('🚨 Sinal de GO ou READY caiu! Voltando ao estado inicial.')
+            # Regra de Segurança: Aborta se cair o sinal (voltar para 0) em qualquer estado após o início
+            elif self.sm_state in ["WAIT_FINISH", "COMPLETED"] and (not self.res_go_state or not self.as_ready_state):
+                self.get_logger().warn('🚨 Sinal de GO ou READY caiu para 0! Voltando ao estado inicial.')
                 self.sm_state = "WAIT_MISSION"
                 self.current_mission_translated = "NONE"
 
-        # Repassa o booleano APENAS se o publisher específico estiver ativo e o estado permitiu chegar aqui
+        # Repassa a mensagem UInt8 para a saída, se o publisher estiver ativado
         if pub_key in self.pubs and self.pubs[pub_key].is_activated:
             self.pubs[pub_key].publish(msg)
 
