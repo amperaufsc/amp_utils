@@ -9,6 +9,10 @@
 #include <amp_sm/clients/cl_lifecycle_monitor.hpp>
 #include <amp_sm/clients/cl_lifecycle_pipeline.hpp>
 
+#include "std_msgs/msg/u_int8.hpp"
+#include <amp_sm/clients/cl_topic_publisher.hpp>
+
+
 namespace amp_sm
 {
 class or_utils : public smacc2::Orthogonal<or_utils>
@@ -18,6 +22,8 @@ public:
     {   
         // cliente que assina no serviço de cada nó. Dessa maneira ele consegue controlar o lifecycle.
         this->createClient<amp_sm::ClRepeaterLifecycle>();
+        this->createClient<amp_sm::ClTopicPublisher<std_msgs::msg::UInt8>>("/as_amp/go/finish");
+    
         
         // lista de nós que fazem parte do subsistema
         std::vector<std::string> nodes = {

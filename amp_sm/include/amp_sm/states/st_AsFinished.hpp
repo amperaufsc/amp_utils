@@ -4,8 +4,10 @@
 #include <lifecycle_msgs/msg/transition.hpp>
 
 #include "../client_behaviors/cb_change_lifecycle.hpp"
+#include "../client_behaviors/cb_publish_topic.hpp"
 #include <amp_sm/clients/cl_lifecycle_pipeline.hpp>
 #include <amp_sm/clients/cl_topic_listener.hpp>
+
 
 namespace amp_sm
 {
@@ -24,7 +26,7 @@ struct st_AsFinished : smacc2::SmaccState<st_AsFinished, Amp_sm>
 
     static void staticConfigure()
     {
-        // ativar todos os nós de sensoriamento e percepção.
+        configure_orthogonal<or_utils, CbPublishEvent>();
     }
 
     void onEntry()

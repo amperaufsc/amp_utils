@@ -4,8 +4,10 @@
 #include <lifecycle_msgs/msg/transition.hpp>
 
 #include "../client_behaviors/cb_change_lifecycle.hpp"
+#include "../client_behaviors/cb_publish_topic.hpp"
 #include <amp_sm/clients/cl_lifecycle_pipeline.hpp>
 #include <amp_sm/clients/cl_topic_listener.hpp>
+
 namespace amp_sm
 {
 
@@ -24,7 +26,8 @@ struct st_AsEmergency : smacc2::SmaccState<st_AsEmergency, Amp_sm>
             "/control_node"
         };
 
-        configure_orthogonal<or_utils, CbChangeLifecycleGroup>(nodes_to_shutdown, 7);   
+        configure_orthogonal<or_utils, CbChangeLifecycleGroup>(nodes_to_shutdown, 7);
+        configure_orthogonal<or_utils, CbPublishEvent>();
     }
 
     void onEntry()
