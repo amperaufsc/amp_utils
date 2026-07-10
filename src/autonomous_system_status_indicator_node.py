@@ -17,10 +17,10 @@ class AutonomousSystemStatusIndicator(Node):
             "st_AsFinished": [[0, 0, 1], 0]
         }
 
-        self.yellowPin = 0
-        self.greenPin = 0
-        self.bluePin = 0
-        self.command = []
+        self.yellowPin = 35
+        self.greenPin = 37
+        self.bluePin = 39
+        self.command = [0, 0, 0, 0]
         self.blink = 0
         self.count = 1
 
@@ -35,15 +35,16 @@ class AutonomousSystemStatusIndicator(Node):
     def timer_callback(self):
         try:
             self.count = (self.count + 1)%2
-            if self.count == 1:
+            if self.count == 1 and self.blink == 1:
                 self.control.update_leds([0, 0, 0])
                 return
-            self.control.update_leds(self.state)
+            self.control.update_leds(self.command)
         except Exception as e:
             self.get_logger().error(f"{e}")
 
     def sm_callback(self, message):
         self.command, self.blink = self.states[message.state_name]
+        self.count = 1
 
 def main(args=None):
     rclpy.init()
