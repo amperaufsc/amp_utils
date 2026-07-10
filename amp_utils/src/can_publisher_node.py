@@ -10,9 +10,19 @@ class CanPublisherNode(Node):
         super().__init__('can_publisher_node')
         self.can_reader = StateCanReader()
 
-        self.go_publisher = self.create_publisher(String, "/can/autonomous_mode", 10)
+        self.go_publisher = self.create_publisher(GoSignal, "/can/autonomous_mode", 10)
 
-        self.timer = self.create_timer(0.01, self.can_publish)
+        self.timer = self.create_timer(0.01, self.can_read)
+        self.timer = self.create_timer(0.1, self.can_send)
+        self.declare_parameter('throttle', 0)
+        self.throttle = self.get_parameter('throttle').get_parameter_value().integer_value
+
+        self.goId = 273
+        self.goSignal = 0
+        self.throttleId = 274
+
+        self.subscription = self.create_subscription(GoSignal, '/as_amp/mission_selected/go', self.go_callback, 10)
+
 
         self.uint8_publishers = {
             #Painel
@@ -69,7 +79,7 @@ class CanPublisherNode(Node):
             "/can/inverter_current": self.create_publisher(Float32, "/can/inverter_current", 10),
             "/can/inverter_voltage": self.create_publisher(Float32, "/can/inverter_voltage", 10),
         }
-    def can_publish(self):
+    def can_read(self):
         try:
             message = self.can_reader.receive_message()
         
@@ -80,7 +90,7 @@ class CanPublisherNode(Node):
             can_data = self.can_reader.can_reader(message)
             if can_data is None:
                 return
-            self.get_logger().info(f'{can_data}')
+            #self.get_logger().info(f'{can_data}')
 
             self.uint8_publish(can_data)
             self.uint16_publish(can_data)
@@ -89,11 +99,18 @@ class CanPublisherNode(Node):
             mode = can_data["AutonomousMode"]
             self.get_logger().debug(f'{mode}')  
             if mode is not None:
-                go_message = String() 
-                go_message.data = str(mode)
+                go_message = GoSignal() 
+                go_message.mission = str(mode)
+                go_message.track = "track"
                 self.go_publisher.publish(go_message)
+
         except Exception as e:
-            self.get_logger().info(f'{e}')
+            self.get_logger().debug(f'erro: {e}')
+
+    def can_send(self):
+            if self.goSignal:
+                self.get_logger().info("enviando Throttle ECU")
+                self.can_reader.send_message(self.throttleId, {"Throttle": self.throttle})
 
     def uint8_publish(self, can_data):
         uint8_signals = {
@@ -129,7 +146,7 @@ class CanPublisherNode(Node):
                     msg = UInt8()
                     msg.data = int(can_data[signal])
                     self.uint8_publishers[topic].publish(msg)
-                    self.get_logger().info(f'Mensagem {msg.data} publicada para {topic}')
+                    #self.get_logger().info(f'Mensagem {msg.data} publicada para {topic}')
             except  Exception as e:
                 self.get_logger().debug(f'Erro {e} ao publicar {signal}')
 
@@ -150,7 +167,7 @@ class CanPublisherNode(Node):
                     msg = UInt16()
                     msg.data = int(can_data[signal])
                     self.uint16_publishers[topic].publish(msg)
-                    self.get_logger().info(f'Mensagem {msg.data} publicada para {topic}')
+                    #self.get_logger().info(f'Mensagem {msg.data} publicada para {topic}')
             except  Exception as e:
                 self.get_logger().debug(f'Erro {e} ao publicar {signal}')
 
@@ -181,9 +198,14 @@ class CanPublisherNode(Node):
                     msg = Float32()
                     msg.data = float(can_data[signal])
                     self.float_publishers[topic].publish(msg)
-                    self.get_logger().info(f'Mensagem {msg.data} publicada para {topic}')
+                    #self.get_logger().info(f'Mensagem {msg.data} publicada para {topic}')
             except  Exception as e:
                 self.get_logger().debug(f'Erro {e} ao publicar {signal}')
+
+    def go_callback(self, message: GoSignal):
+        self.goSignal = (self.goSignal + 1)%2
+        self.get_logger().info("Enviando GO")
+        self.can_reader.send_message(self.goId, {"GoECU": self.goSignal})
 
 
 def main(args=None):
