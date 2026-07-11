@@ -30,6 +30,7 @@ struct st_AsFinished : smacc2::SmaccState<st_AsFinished, Amp_sm>
             "/check_lifecycle_node",
             "/repeater_node",
             "/perception_lifecycle_node",
+            "/disparity_pub_life",
             "/path_node",
             "/yolo_node",
             "/control_node",

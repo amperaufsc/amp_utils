@@ -39,7 +39,8 @@ public:
             "/path_node",
             "/yolo_node",
             "/check_lifecycle_node",
-            "/mapper_node"
+            "/mapper_node",
+            "/disparity_pub_life"
 
             //...
         };

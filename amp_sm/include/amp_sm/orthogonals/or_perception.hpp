@@ -25,7 +25,8 @@ public:
         // lista de nós que fazem parte do subsistema
         std::vector<std::string> nodes = {
             "/perception_lifecycle_node",
-            "/yolo_node"
+            "/yolo_node",
+            "/disparity_pub_life"
         };
 
         // cliente que verifica a integridade de todos os nós. Caso algum va para Error ou Desconfigurado ele disparará um evento.

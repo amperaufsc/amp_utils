@@ -21,6 +21,7 @@ struct st_AsEmergency : smacc2::SmaccState<st_AsEmergency, Amp_sm>
             "/check_lifecycle_node",
             "/repeater_node",
             "/perception_lifecycle_node",
+            "/disparity_pub_life",
             "/path_node",
             "/yolo_node",
             "/control_node",

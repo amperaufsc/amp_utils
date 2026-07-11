@@ -60,6 +60,7 @@ struct st_AsReady : smacc2::SmaccState<st_AsReady, Amp_sm>
         std::vector<std::string> nodes_to_activate = {
             "/repeater_node",
             "/perception_lifecycle_node",
+            "/disparity_pub_life",
             "/path_node",
             "/yolo_node",
             "/control_node"
