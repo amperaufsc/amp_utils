@@ -23,7 +23,8 @@ struct st_AsEmergency : smacc2::SmaccState<st_AsEmergency, Amp_sm>
             "/perception_lifecycle_node",
             "/path_node",
             "/yolo_node",
-            "/control_node"
+            "/control_node",
+            "/mapper_node"
         };
 
         configure_orthogonal<or_utils, CbChangeLifecycleGroup>(nodes_to_shutdown, 99);

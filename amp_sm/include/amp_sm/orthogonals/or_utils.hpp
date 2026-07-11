@@ -38,7 +38,8 @@ public:
             "/control_node",
             "/path_node",
             "/yolo_node",
-            "/check_lifecycle_node"
+            "/check_lifecycle_node",
+            "/mapper_node"
 
             //...
         };

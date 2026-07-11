@@ -27,7 +27,9 @@ struct st_AsDriving : smacc2::SmaccState<st_AsDriving, Amp_sm>
 
     static void staticConfigure()
     {
-        // Configure o comportamento de cliente para enviar o comando de ativação
+        configure_orthogonal<or_utils, CbChangeLifecycle<ClMapperLifecycle>>(
+            lifecycle_msgs::msg::Transition::TRANSITION_ACTIVATE
+        );
   }
     
     void onEntry()

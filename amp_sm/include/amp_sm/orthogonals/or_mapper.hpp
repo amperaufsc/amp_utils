@@ -17,7 +17,14 @@ public:
     void onInitialize() override
     {   
         
-        // cliente que assina no serviço de cada nó. Dessa maneira ele consegue controlar o lifecycle.
+                // lista de nós que fazem parte do subsistema
+        std::vector<std::string> nodes = {
+            "/mapper_node"
+        };
+        
+        // cliente que verifica a integridade de todos os nós. Caso algum va para Error ou Desconfigurado ele disparará um evento.
+        this->createClient<amp_sm::ClLifecycleMonitor>(nodes);
+
         this->createClient<amp_sm::ClMapperLifecycle>();        
 
     }

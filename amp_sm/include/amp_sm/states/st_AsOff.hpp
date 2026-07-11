@@ -33,7 +33,8 @@ struct st_AsOff : smacc2::SmaccState<st_AsOff, Amp_sm>
             "/perception_lifecycle_node",
             "/yolo_node",
             "/path_node",
-            "/control_node"
+            "/control_node",
+            "/mapper_node"
         };
 
         configure_orthogonal<or_utils, CbChangeLifecycleGroup>(nodes_to_configure, 1);
