@@ -16,10 +16,12 @@ class CanPublisherNode(Node):
         self.timer = self.create_timer(0.1, self.can_send)
         self.declare_parameter('throttle', 0)
         self.throttle = self.get_parameter('throttle').get_parameter_value().integer_value
+        self.count = 0
+        self.initialized = 0
 
-        self.goId = 273
+        self.goId = 0x361
         self.goSignal = 0
-        self.throttleId = 274
+        self.throttleId = 0x161
 
         self.subscription = self.create_subscription(GoSignal, '/as_amp/mission_selected/go', self.go_callback, 10)
 
@@ -107,9 +109,17 @@ class CanPublisherNode(Node):
             self.get_logger().debug(f'erro: {e}')
 
     def can_send(self):
-            if self.goSignal:
-                self.get_logger().info("enviando Throttle ECU")
-                self.can_reader.send_message(self.throttleId, {"Throttle": self.throttle})
+        if self.initialized:
+                if self.goSignal:
+                    throttle = self.throttle - self.count
+                    self.can_reader.send_message(self.throttleId, {"Throttle": throttle})
+                    if throttle > 1000:
+                        self.count += 10
+                    self.get_logger().info(f"enviando {throttle} de Throttle")
+                else:
+                    self.can_reader.send_message(self.throttleId, {"Throttle": 0})
+                    self.get_logger().info(f"enviando 0 de Throttle")
+
 
     def uint8_publish(self, can_data):
         uint8_signals = {
@@ -201,17 +211,24 @@ class CanPublisherNode(Node):
                 self.get_logger().debug(f'Erro {e} ao publicar {signal}')
 
     def go_callback(self, message: GoSignal):
-        self.goSignal = (self.goSignal + 1)%2
-        self.get_logger().info("Enviando GO")
-        self.can_reader.send_message(self.goId, {"GoECU": self.goSignal})
+        self.initialized = 1
+        self.goSignal = (self.goSignal + 1) % 2
+        self.count = 0
+        if self.goSignal == 1:
+            self.get_logger().info("Enviando GO")
+            self.can_reader.send_message(self.goId, {"GoECU": self.goSignal})
 
 
 def main(args=None):
     rclpy.init(args=args)
     node = CanPublisherNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    finally:
+        node.goSignal = 0
+        node.can_reader.send_message(node.goId, {"GoECU": node.goSignal})
+        node.destroy_node()
+        rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
