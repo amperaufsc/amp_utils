@@ -17,6 +17,7 @@ class CanPublisherNode(Node):
         self.declare_parameter('throttle', 0)
         self.throttle = self.get_parameter('throttle').get_parameter_value().integer_value
         self.count = 0
+        self.variation = 50
         self.initialized = 0
 
         self.goId = 0x361
@@ -113,8 +114,8 @@ class CanPublisherNode(Node):
                 if self.goSignal:
                     throttle = self.throttle - self.count
                     self.can_reader.send_message(self.throttleId, {"Throttle": throttle})
-                    if throttle > 1000:
-                        self.count += 10
+                    if throttle > 4000:
+                        self.count += self.variation
                     self.get_logger().info(f"enviando {throttle} de Throttle")
                 else:
                     self.can_reader.send_message(self.throttleId, {"Throttle": 0})

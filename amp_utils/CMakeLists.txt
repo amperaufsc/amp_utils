@@ -29,6 +29,7 @@ endif()
 install(
         PROGRAMS 
         src/can_publisher_node.py
+	src/jetson_stats_node.py
         DESTINATION lib/${PROJECT_NAME}
 )
 
